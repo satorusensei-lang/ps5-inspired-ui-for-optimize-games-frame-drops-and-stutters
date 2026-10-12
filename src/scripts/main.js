@@ -10,6 +10,7 @@ import { initControllerInput } from './components/controller-input.js';
 import { initOverlays } from './components/overlays.js';
 import { initMediaLauncher } from './components/media-launcher.js';
 import { initBootScreen } from './components/boot-screen.js';
+import { initProfileManager } from './components/profile-manager.js';
 import { ps5Audio } from './audio/ps5-audio.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -22,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initControllerInput();
   initOverlays();
   initBootScreen();
+  initProfileManager();
   initDesktopControls();
 
   // First user interaction initializes Web Audio API context and begins ambient soundscape

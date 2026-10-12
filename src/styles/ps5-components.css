@@ -1633,11 +1633,105 @@ body.game-hub-active .ps5-hero-details {
   border-radius: 4px;
 }
 
-.profile-details-text h3 {
-  font-size: 1.4rem;
+.profile-name-display-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.profile-name-display-row h3 {
+  font-size: 1.45rem;
   font-weight: 700;
   color: #fff;
-  margin-bottom: 6px;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.profile-edit-name-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: var(--ps-font);
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.profile-edit-name-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.profile-name-edit-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.profile-name-input {
+  background: rgba(0, 0, 0, 0.65);
+  border: 1.5px solid rgba(99, 102, 241, 0.7);
+  color: #fff;
+  font-family: var(--ps-font);
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 8px;
+  outline: none;
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.35);
+  min-width: 220px;
+  transition: all 0.2s ease;
+}
+
+.profile-name-input:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 22px rgba(99, 102, 241, 0.55);
+}
+
+.profile-name-save-btn {
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  font-family: var(--ps-font);
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 8px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.profile-name-save-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.5);
+}
+
+.profile-name-cancel-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  font-family: var(--ps-font);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.profile-name-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
 }
 
 .profile-badges-row {

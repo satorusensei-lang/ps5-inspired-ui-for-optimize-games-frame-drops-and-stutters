@@ -105,7 +105,7 @@
             <img class="ps5-avatar-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" alt="Profile Avatar" />
             <span class="ps5-avatar-status" title="Online"></span>
           </div>
-          <span class="ps5-profile-name">PlayStation Master</span>
+          <span class="ps5-profile-name" id="ps5-header-profile-name">PlayStation Master</span>
           <div class="ps5-trophy-ring-badge" title="Level 420 • 74% to Level 421">
             <svg class="ps5-trophy-ring-svg" viewBox="0 0 36 36">
               <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="3.5" />
@@ -504,6 +504,14 @@
           <button class="modal-close-btn" data-close-overlay title="Close (○ Circle)">✕</button>
         </div>
         <div class="ps5-settings-list">
+          <div class="settings-item clickable" id="setting-account-name-btn" style="cursor: pointer; border-color: rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.1);">
+            <div class="settings-icon">👤</div>
+            <div class="settings-text">
+              <h3>Users and Accounts</h3>
+              <p>Change your PlayStation Online ID, Player Display Name & Account Info</p>
+            </div>
+            <span class="settings-tag" id="current-account-name-tag" style="color: #a5b4fc; border-color: #a5b4fc;">PlayStation Master</span>
+          </div>
           <div class="settings-item">
             <div class="settings-icon">🖥️</div>
             <div class="settings-text">
@@ -561,7 +569,23 @@
             <span class="profile-online-badge">Online</span>
           </div>
           <div class="profile-details-text">
-            <h3>PlayStation Master</h3>
+            <div id="profile-name-display-row" class="profile-name-display-row">
+              <h3 id="ps5-modal-profile-name">PlayStation Master</h3>
+              <button id="btn-edit-profile-name" class="profile-edit-name-btn" title="Edit Online ID / Player Name">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                <span>Edit Online ID</span>
+              </button>
+            </div>
+
+            <form id="profile-name-edit-form" class="profile-name-edit-form" style="display: none;">
+              <input type="text" id="profile-name-input" class="profile-name-input" maxlength="24" placeholder="Enter Online ID..." autocomplete="off" spellcheck="false" />
+              <button type="submit" class="profile-name-save-btn">Save</button>
+              <button type="button" id="btn-cancel-profile-name" class="profile-name-cancel-btn">Cancel</button>
+            </form>
+
             <div class="profile-badges-row">
               <span class="ps-plus-badge">PlayStation®Plus Premium</span>
               <span class="ps-level-badge">Level 420 ★</span>
