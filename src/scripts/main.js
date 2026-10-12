@@ -55,14 +55,6 @@ function initDesktopControls() {
       window.electronAPI.closeWindow?.();
     });
 
-    const fsBtn = document.getElementById('btn-header-fullscreen');
-    if (fsBtn) {
-      fsBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        window.electronAPI.toggleFullscreen?.();
-      });
-    }
-
     window.electronAPI.onFullscreenChange?.((isFullscreen) => {
       document.body.classList.toggle('is-fullscreen', isFullscreen);
     });

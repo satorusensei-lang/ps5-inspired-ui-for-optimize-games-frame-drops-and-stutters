@@ -21,13 +21,6 @@ export function initOverlays() {
   // Wire Settings button
   document.getElementById('btn-header-settings')?.addEventListener('click', () => openOverlay('ps5-settings-modal'));
   document.getElementById('setting-boot-themes-btn')?.addEventListener('click', () => openOverlay('ps5-boot-themes-modal'));
-  document.getElementById('btn-header-fullscreen')?.addEventListener('click', () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-    } else {
-      document.exitFullscreen().catch(() => {});
-    }
-  });
 
   // Wire Audio Mute/Unmute button
   const audioBtn = document.getElementById('btn-header-audio');
