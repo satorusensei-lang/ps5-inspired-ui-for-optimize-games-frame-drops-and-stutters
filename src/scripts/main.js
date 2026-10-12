@@ -48,9 +48,6 @@ function initDesktopControls() {
     document.getElementById('win-btn-minimize')?.addEventListener('click', () => {
       window.electronAPI.minimizeWindow?.();
     });
-    document.getElementById('win-btn-maximize')?.addEventListener('click', () => {
-      window.electronAPI.maximizeWindow?.();
-    });
     document.getElementById('win-btn-close')?.addEventListener('click', () => {
       window.electronAPI.closeWindow?.();
     });
