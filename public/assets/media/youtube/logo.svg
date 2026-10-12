@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 120" width="460" height="120">
+  <defs>
+    <filter id="logoShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.8"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#logoShadow)">
+    <!-- Red Play Pill on Left -->
+    <g transform="translate(16, 25)">
+      <rect width="100" height="70" rx="18" fill="#ff0000"/>
+      <polygon points="42,23 68,35 42,47" fill="#ffffff"/>
+    </g>
+
+    <!-- White YouTube Text -->
+    <text x="132" y="76"
+          font-family="'YouTube Sans', 'Roboto', 'Arial Black', sans-serif"
+          font-size="52"
+          font-weight="800"
+          letter-spacing="-1.5px"
+          fill="#ffffff">
+      YouTube
+    </text>
+  </g>
+</svg>

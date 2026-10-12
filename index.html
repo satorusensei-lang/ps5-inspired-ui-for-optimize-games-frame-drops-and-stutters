@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PlayStation®5 — Official Dashboard for PC</title>
+
+  <!-- Google Fonts: Space Grotesk & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Space+Grotesk:wght@400..700&display=swap" rel="stylesheet" />
+
+  <!-- PS5 Master Stylesheets -->
+  <link rel="stylesheet" href="./src/styles/ps5-variables.css" />
+  <link rel="stylesheet" href="./src/styles/ps5-components.css" />
+  <link rel="stylesheet" href="./src/styles/ps5-main.css" />
+</head>
+<body>
+  <!-- ====================================================================
+       PlayStation 5 Authentic Boot / Opening Animation & Auto-Sync
+       ==================================================================== -->
+  <div id="ps5-boot-screen" class="ps5-boot-screen">
+    <canvas id="ps5-boot-canvas" class="ps5-boot-canvas"></canvas>
+    <div class="ps5-boot-center">
+      <div class="ps5-boot-logo-box">
+        <svg class="ps5-boot-svg-logo" viewBox="0 0 24 24" width="112" height="90" fill="#ffffff">
+          <path d="M15.858 11.451c-.313.395-1.079.676-1.079.676l-5.696 2.046v-1.509l4.192-1.493c.476-.17.549-.412.162-.538c-.386-.127-1.085-.09-1.56.08l-2.794.984v-1.566l.161-.054s.807-.286 1.942-.412c1.135-.125 2.525.017 3.616.43c1.23.39 1.368.962 1.056 1.356M9.625 8.883v-3.86c0-.453-.083-.87-.508-.988c-.326-.105-.528.198-.528.65v9.664l-2.606-.827V2c1.108.206 2.722.692 3.59.985c2.207.757 2.955 1.7 2.955 3.825c0 2.071-1.278 2.856-2.903 2.072Zm-8.424 3.625C-.061 12.15-.271 11.41.304 10.984c.532-.394 1.436-.69 1.436-.69l3.737-1.33v1.515l-2.69.963c-.474.17-.547.411-.161.538c.386.126 1.085.09 1.56-.08l1.29-.469v1.356l-.257.043a8.45 8.45 0 0 1-4.018-.323Z"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Master PS5 Screen Container -->
+  <div class="ps5-dashboard" id="ps5-dashboard">
+    <!-- Dynamic 4K Ambient Background Layers (Cross-fade) -->
+    <div id="ps5-bg-layer-a" class="ps5-background-layer"></div>
+    <div id="ps5-bg-layer-b" class="ps5-background-layer fade-out"></div>
+
+    <!-- Atmospheric Vignette, Ambient Top Blur & Particle Canvas -->
+    <div class="ps5-ambient-blur-top"></div>
+    <div class="ps5-vignette"></div>
+    <div class="ps5-particles-overlay"></div>
+
+    <!-- ====================================================================
+         Top Header Navigation
+         ==================================================================== -->
+    <header class="ps5-header">
+      <!-- Left: Games / Media Category Tabs (Authentic PS5) -->
+      <nav class="ps5-header-left" aria-label="Main Navigation">
+        <button id="tab-games" class="ps5-tab active" data-tab="games">
+          <span>Games</span>
+        </button>
+        <button id="tab-media" class="ps5-tab" data-tab="media">
+          <span>Media</span>
+        </button>
+      </nav>
+
+      <!-- Right: Search, Settings, Profile, Clock, Controller Badge -->
+      <div class="ps5-header-right">
+        <!-- Search Icon (Triangle △) -->
+        <button id="btn-header-search" class="ps5-icon-btn" title="Search (△)">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="11" cy="11" r="7"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
+
+        <!-- Settings Gear Icon -->
+        <button id="btn-header-settings" class="ps5-icon-btn" title="Settings">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+
+        <!-- Audio Ambient Music Toggle (Mute/Unmute) -->
+        <button id="btn-header-audio" class="ps5-icon-btn" title="Toggle Dashboard Music & Soundscape">
+          <svg id="header-audio-icon-on" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <svg id="header-audio-icon-muted" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" style="display: none;">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+        </button>
+
+        <!-- Fullscreen Console Mode Toggle (F11) -->
+        <button id="btn-header-fullscreen" class="ps5-icon-btn" title="Toggle Fullscreen (F11)">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+          </svg>
+        </button>
+
+        <!-- Controller Status Badge -->
+        <div id="controller-status-badge" class="controller-status-badge" title="Connect a USB / Bluetooth Gamepad (DualSense, Xbox, or PC)">
+          <span id="controller-status-dot" class="controller-status-dot"></span>
+          <span id="controller-status-label">No Controller</span>
+        </div>
+
+        <!-- User Profile Avatar & Level Progress Ring -->
+        <div id="btn-header-profile" class="ps5-profile-btn" title="View Profile & Trophies">
+          <div class="ps5-avatar-wrap">
+            <img class="ps5-avatar-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" alt="Profile Avatar" />
+            <span class="ps5-avatar-status" title="Online"></span>
+          </div>
+          <span class="ps5-profile-name">PlayStation Master</span>
+          <div class="ps5-trophy-ring-badge" title="Level 420 • 74% to Level 421">
+            <svg class="ps5-trophy-ring-svg" viewBox="0 0 36 36">
+              <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="3.5" />
+              <path class="ring-progress" stroke-dasharray="74, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--ps-platinum)" stroke-width="3.5" stroke-linecap="round" />
+            </svg>
+            <span class="ps5-trophy-level-num">420</span>
+          </div>
+        </div>
+
+        <!-- Live Digital Clock -->
+        <div id="ps5-live-clock" class="ps5-clock">12:00 PM</div>
+      </div>
+    </header>
+
+    <!-- ====================================================================
+         Main Games / Apps Carousel (120FPS GPU Track)
+         ==================================================================== -->
+    <section class="ps5-carousel-section" id="ps5-tiles-carousel">
+      <!-- Populated dynamically by carousel.js: PS Store + Installed Games + Game Library -->
+    </section>
+
+    <!-- ====================================================================
+         Hero Details & Interactive Game Hub
+         ==================================================================== -->
+    <section class="ps5-hero-details">
+      <div class="ps5-game-header">
+        <div id="ps5-hero-studio" class="ps5-studio-badge" style="display: none;"></div>
+        <img id="ps5-hero-logo" class="ps5-hero-logo" alt="Game Logo" style="display: none;" />
+        <h1 id="ps5-hero-title" class="ps5-game-title">
+          Marvel's Spider-Man 2
+        </h1>
+        <div id="ps5-hero-meta" class="ps5-game-meta">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="ps5-play-actions">
+          <button id="ps5-play-btn" class="ps5-play-btn" title="Launch Game (Press Enter / ✕)">
+            <svg id="ps5-play-btn-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            <span>Play Game</span>
+          </button>
+
+          <button id="ps5-options-btn" class="ps5-options-btn" title="Options (☰ / □)">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+              <circle cx="12" cy="5" r="1.8"/>
+              <circle cx="12" cy="12" r="1.8"/>
+              <circle cx="12" cy="19" r="1.8"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Activity Cards Row (Game Hub) -->
+      <div id="ps5-activities-row" class="ps5-activities-row">
+        <!-- Populated dynamically by carousel.js -->
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         Footer Bar with DualSense Hints & PS Button Trigger
+         ==================================================================== -->
+    <footer class="ps5-footer-bar">
+      <!-- Quick Menu Trigger Button -->
+      <button id="ps5-btn-trigger" class="ps-button-trigger" title="Open PS Control Center (Press P)">
+        <svg class="ps-btn-icon-glyph" viewBox="0 0 32 32">
+          <path d="M16 2C8.268 2 2 8.268 2 16s6.268 14 14 14 14-6.268 14-14S23.732 2 16 2zm-1.5 6.5h3c2.485 0 4.5 1.79 4.5 4s-2.015 4-4.5 4H16v7h-1.5v-15zm3 6.5c1.38 0 2.5-.895 2.5-2s-1.12-2-2.5-2h-1.5v4h1.5z"/>
+        </svg>
+        <span>Control Center (Press P)</span>
+      </button>
+
+      <!-- Controller / Keyboard Button Prompts -->
+      <div class="ps5-hints">
+        <div class="ps5-hint" data-virtual-btn="cross" style="cursor: pointer;" title="Cross / Enter / Play">
+          <span id="hud-btn-cross" class="ps-glyph glyph-cross">✕</span>
+          <span>Enter / Play</span>
+        </div>
+        <div class="ps5-hint" data-virtual-btn="circle" style="cursor: pointer;" title="Circle / Back / Exit">
+          <span id="hud-btn-circle" class="ps-glyph glyph-circle">○</span>
+          <span>Back</span>
+        </div>
+        <div class="ps5-hint" data-virtual-btn="triangle" style="cursor: pointer;" title="Triangle / Search">
+          <span id="hud-btn-triangle" class="ps-glyph glyph-triangle">△</span>
+          <span>Search</span>
+        </div>
+        <div class="ps5-hint" data-virtual-btn="square" style="cursor: pointer;" title="Square / Options">
+          <span id="hud-btn-square" class="ps-glyph glyph-square">□</span>
+          <span>Options</span>
+        </div>
+      </div>
+    </footer>
+
+    <!-- ====================================================================
+         PlayStation 5 Control Centre (Authentic DualSense Quick Menu)
+         ==================================================================== -->
+    <div id="ps5-control-center" class="ps5-control-center">
+      <!-- Floating Upper Cards Rack -->
+      <div class="cc-floating-cards">
+        <!-- Card 1: Active Game / Resume Activity Card -->
+        <div class="cc-card cc-game-card">
+          <div id="cc-card-game-thumb" class="cc-card-thumb"></div>
+          <div class="cc-card-details">
+            <div class="cc-card-tag">Active Title</div>
+            <h4 id="cc-card-game-title" class="cc-card-title">Marvel's Spider-Man 2</h4>
+            <p id="cc-card-game-sub" class="cc-card-sub">Ready to Resume • 4K 60FPS</p>
+            <div style="display: flex; gap: 10px; align-items: center; margin-top: 4px;">
+              <button id="cc-card-resume-btn" class="cc-btn-primary">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <span>Resume Activity</span>
+              </button>
+              <button id="cc-card-close-btn" class="cc-btn-secondary" style="border-color: rgba(239, 68, 68, 0.5); color: #f87171;" title="Close Game on PC">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style="vertical-align: middle; margin-right: 4px;"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                <span>Close Game</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Voice Party / Game Base Card -->
+        <div class="cc-card cc-party-card">
+          <div class="cc-card-details">
+            <div class="cc-card-tag" style="color: #38bdf8;">Voice Party Active</div>
+            <h4 class="cc-card-title">Raid Squad (3/4)</h4>
+            <p class="cc-card-sub">Sarah, Alex, Marcus in party chat</p>
+            <button id="cc-card-party-btn" class="cc-btn-secondary">
+              <span>View Voice Party</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 3: Spotify Media Player Card -->
+        <div class="cc-card cc-music-card">
+          <div class="cc-card-details">
+            <div class="cc-card-tag" style="color: #10b981;">Spotify Player</div>
+            <h4 class="cc-card-title">Spider-Man 2 Original OST</h4>
+            <p id="cc-music-status-label" class="cc-card-sub">Playing • Track 4: Greater Together</p>
+            <div class="cc-music-controls">
+              <button id="cc-card-music-toggle" class="cc-btn-music-play">
+                <svg id="cc-music-play-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                  <rect x="6" y="4" width="4" height="16"/>
+                  <rect x="14" y="4" width="4" height="16"/>
+                </svg>
+              </button>
+              <div class="cc-music-waveform">
+                <span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: DualSense Wireless Controller Battery & Status Widget -->
+        <div class="cc-card cc-controller-card">
+          <div class="cc-card-details">
+            <div class="cc-card-tag" style="color: #60a5fa;">DualSense™ Wireless Controller</div>
+            <div class="cc-controller-battery-row">
+              <span class="cc-controller-icon">🎮</span>
+              <div class="cc-battery-visual" title="Battery: 100% Full">
+                <span class="battery-segment active">❚</span>
+                <span class="battery-segment active">❚</span>
+                <span class="battery-segment active">❚</span>
+              </div>
+              <span class="cc-battery-percentage">100%</span>
+              <span class="cc-charging-bolt" title="Connected / Full Power">⚡</span>
+            </div>
+            <p class="cc-card-sub" style="margin-top: 6px;">Haptics: Strong • Trigger Effect: Active</p>
+          </div>
+        </div>
+
+        <!-- Card 5: Steam Background Download & Sync Progress Bar -->
+        <div class="cc-card cc-download-card">
+          <div class="cc-card-details">
+            <div class="cc-card-tag" style="color: var(--ps-cyan);">Downloads / Syncing</div>
+            <h4 class="cc-card-title">Steam Cloud & Shader Cache</h4>
+            <div class="cc-sync-speed-row">
+              <span class="cc-sync-speed">48.2 MB/s</span>
+              <span class="cc-sync-size">3.2 GB / 86 GB remaining</span>
+            </div>
+            <div class="cc-sync-progress-bar">
+              <div class="cc-sync-progress-fill" style="width: 52%;"></div>
+            </div>
+            <p class="cc-card-sub" style="margin-top: 6px;">High-Speed NVMe SSD • Ready in 12 mins</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Persistent Bottom Icon Dock -->
+      <div class="cc-dock">
+        <!-- Home -->
+        <button id="cc-dock-home" class="cc-dock-icon" title="Home (PS Button)">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          </svg>
+          <span class="cc-dock-label">Home</span>
+        </button>
+
+        <!-- Switcher -->
+        <button id="cc-dock-switcher" class="cc-dock-icon" title="Switcher (Fast Switch Suspended Games)">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="20" rx="5"/>
+            <path d="M16 12l-4-4-4 4M12 16V8"/>
+          </svg>
+          <span class="cc-dock-label">Switcher</span>
+        </button>
+
+        <!-- Notifications -->
+        <button id="cc-dock-notifications" class="cc-dock-icon" title="Notifications">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span class="cc-dock-badge">1</span>
+          <span class="cc-dock-label">Notifications</span>
+        </button>
+
+        <!-- Game Base -->
+        <button id="cc-dock-gamebase" class="cc-dock-icon" title="Game Base & Friends">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span class="cc-dock-label">Game Base</span>
+        </button>
+
+        <!-- Music -->
+        <button id="cc-dock-music" class="cc-dock-icon" title="Music Player">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18V5l12-2v13"/>
+            <circle cx="6" cy="18" r="3"/>
+            <circle cx="18" cy="16" r="3"/>
+          </svg>
+          <span class="cc-dock-label">Music</span>
+        </button>
+
+        <!-- DualSense Mic Toggle with Amber LED -->
+        <button id="cc-dock-mic" class="cc-dock-icon" title="DualSense Microphone (Click to Mute)">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+          <span class="cc-mic-amber-led" style="display: none;"></span>
+          <span class="cc-dock-label">Mic</span>
+        </button>
+
+        <!-- Accessories -->
+        <button id="cc-dock-accessories" class="cc-dock-icon" title="DualSense Accessories">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="6" width="18" height="12" rx="2"/>
+            <line x1="23" y1="10" x2="23" y2="14"/>
+            <line x1="5" y1="10" x2="5" y2="14" stroke="#10b981" stroke-width="2.5"/>
+            <line x1="9" y1="10" x2="9" y2="14" stroke="#10b981" stroke-width="2.5"/>
+            <line x1="13" y1="10" x2="13" y2="14" stroke="#10b981" stroke-width="2.5"/>
+          </svg>
+          <span class="cc-dock-label">Accessories</span>
+        </button>
+
+        <!-- Quick Boot Theme Switcher -->
+        <button id="cc-dock-boot-themes" class="cc-dock-icon" title="Startup Boot Theme Switcher">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <span class="cc-dock-label">Themes</span>
+        </button>
+
+        <!-- Power Options -->
+        <button id="cc-dock-power" class="cc-dock-icon" title="Power Menu">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+            <line x1="12" y1="2" x2="12" y2="12"/>
+          </svg>
+          <span class="cc-dock-label">Power</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         Fullscreen Game Running Mode ("react like ps5")
+         ==================================================================== -->
+    <div id="ps5-running-game-modal" class="ps5-running-game-modal">
+      <div id="game-live-bg" class="game-live-bg"></div>
+
+      <div class="game-hud-overlay">
+        <div class="game-hud-top">
+          <div class="game-spec-badge">
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+            <span id="game-hud-studio">PlayStation Studios</span>
+            <span style="color: var(--ps-white-60);">• 4K 60FPS HDR</span>
+          </div>
+
+          <div style="font-family: var(--ps-font-heading); font-size: 0.9rem; color: var(--ps-white-60);">
+            Resolution: 3840 × 2160 (Native)
+          </div>
+        </div>
+
+        <div class="game-hud-center">
+          <h2 id="game-hud-title" class="game-hud-title">Marvel's Spider-Man 2</h2>
+          <p id="game-hud-status" class="game-hud-status">Ready to Resume • Fast Travel Available</p>
+
+          <div class="game-quick-actions">
+            <button id="btn-resume-game" class="btn-resume-game">
+              Resume Gameplay
+            </button>
+            <button id="btn-exit-game" class="btn-exit-game">
+              Quit Game (Return to Home)
+            </button>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; color: var(--ps-white-60); font-size: 0.88rem;">
+          <div>DualSense Wireless Controller Connected (Adaptive Triggers Active)</div>
+          <div>Press <strong>ESC</strong> or <strong>○ Circle</strong> to exit</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         PlayStation 5 In-App YouTube & Media Center
+         Full in-app YouTube browsing & playback — never opens external tabs!
+         ==================================================================== -->
+    <!-- ====================================================================
+         PlayStation 5 Dedicated Media App Modal
+         Runs original YouTube & YouTube Music in dedicated PS5 app window
+         ==================================================================== -->
+    <div id="ps5-media-app-modal" class="ps5-media-app-modal">
+      <div class="ps5-media-active-card">
+        <div class="ps5-media-card-glow"></div>
+        <div class="ps5-media-card-content">
+          <div class="ps5-media-brand-row">
+            <div id="ps5-media-icon-wrap" class="ps5-media-icon-wrap">
+              <svg id="ps5-media-active-icon" viewBox="0 0 24 24" width="48" height="48" fill="#ff0000">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+            </div>
+            <div class="ps5-media-brand-text">
+              <h2 id="ps5-media-app-name" class="ps5-media-title">YouTube</h2>
+              <span id="ps5-media-app-edition" class="ps5-media-edition">PlayStation®5 Dedicated App Mode</span>
+            </div>
+          </div>
+
+          <div class="ps5-media-url-pill">
+            <span class="ps5-url-lock">🔒</span>
+            <span id="ps5-media-active-url" class="ps5-url-text">https://www.youtube.com</span>
+            <span class="ps5-url-status">● LIVE SESSION</span>
+          </div>
+
+          <p id="ps5-media-desc" class="ps5-media-desc">
+            Running official YouTube in a dedicated frameless app window with your signed-in Google account (no browser tabs).
+          </p>
+
+          <div class="ps5-media-actions-row">
+            <button id="btn-reopen-media-app" class="ps5-media-btn-primary">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+              </svg>
+              <span>Bring Window to Front</span>
+            </button>
+            <button id="media-app-close-btn" class="ps5-media-btn-secondary">
+              <span>✕ Return to PS5 Dashboard</span>
+            </button>
+          </div>
+
+          <div class="ps5-media-footer-hints">
+            <span class="ps5-hint-pill">Press <strong>ESC</strong> or <strong>○ Circle</strong> to return to dashboard</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- ====================================================================
+         Native PS5 Modals & Overlays (Replacing all browser alert dialogs)
+         ==================================================================== -->
+
+    <!-- 1. System Settings Modal -->
+    <div id="ps5-settings-modal" class="ps5-modal-overlay">
+      <div class="ps5-modal-box">
+        <div class="ps5-modal-header">
+          <h2>Settings</h2>
+          <button class="modal-close-btn" data-close-overlay title="Close (○ Circle)">✕</button>
+        </div>
+        <div class="ps5-settings-list">
+          <div class="settings-item">
+            <div class="settings-icon">🖥️</div>
+            <div class="settings-text">
+              <h3>Screen and Video</h3>
+              <p>Resolution: 2160p (4K UHD) • VRR: Automatic • 120Hz Output: Enabled • HDR: On</p>
+            </div>
+            <span class="settings-tag">4K 120Hz</span>
+          </div>
+          <div class="settings-item">
+            <div class="settings-icon">🎧</div>
+            <div class="settings-text">
+              <h3>Sound & 3D Audio</h3>
+              <p>Tempest 3D AudioTech enabled for Stereo Headphones & TV Speakers</p>
+            </div>
+            <span class="settings-tag">3D Active</span>
+          </div>
+          <div class="settings-item">
+            <div class="settings-icon">💾</div>
+            <div class="settings-text">
+              <h3>Storage</h3>
+              <p>Console Storage: 825 GB (450 GB Free) • M.2 NVMe SSD: 1.8 TB (1.2 TB Free)</p>
+            </div>
+            <span class="settings-tag">1.6 TB Free</span>
+          </div>
+          <div class="settings-item clickable" id="setting-boot-themes-btn" style="cursor: pointer; border-color: rgba(59, 130, 246, 0.4); background: rgba(59, 130, 246, 0.1);">
+            <div class="settings-icon">✨</div>
+            <div class="settings-text">
+              <h3>Startup Boot Animations</h3>
+              <p>Preview and choose from 5 official PS5 opening animation editions</p>
+            </div>
+            <span class="settings-tag" id="current-boot-theme-tag" style="color: #60a5fa; border-color: #60a5fa;">Cosmos Gold</span>
+          </div>
+          <div class="settings-item">
+            <div class="settings-icon">🎮</div>
+            <div class="settings-text">
+              <h3>Accessories & Controller</h3>
+              <p>DualSense Vibration: Strong (Standard) • Trigger Effect: Strong • Communication: USB/Bluetooth</p>
+            </div>
+            <span class="settings-tag">DualSense</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Profile Card Modal -->
+    <div id="ps5-profile-modal" class="ps5-modal-overlay">
+      <div class="ps5-modal-box profile-box">
+        <div class="ps5-modal-header">
+          <h2>PlayStation Profile</h2>
+          <button class="modal-close-btn" data-close-overlay title="Close (○ Circle)">✕</button>
+        </div>
+        <div class="profile-hero-content">
+          <div class="profile-avatar-large">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="Avatar" />
+            <span class="profile-online-badge">Online</span>
+          </div>
+          <div class="profile-details-text">
+            <h3>PlayStation Master</h3>
+            <div class="profile-badges-row">
+              <span class="ps-plus-badge">PlayStation®Plus Premium</span>
+              <span class="ps-level-badge">Level 420 ★</span>
+            </div>
+          </div>
+        </div>
+        <!-- Level Progress Bar -->
+        <div class="profile-level-progress-card">
+          <div class="level-progress-info">
+            <span class="level-title">Trophy Level 420</span>
+            <span class="level-sub">74% to Level 421 (1,480 / 2,000 XP)</span>
+          </div>
+          <div class="level-bar-wrap">
+            <div class="level-bar-fill" style="width: 74%;"></div>
+          </div>
+        </div>
+
+        <div class="trophy-stats-grid">
+          <div class="trophy-stat-card">
+            <span class="trophy-icon">🏆</span>
+            <span class="trophy-count">4</span>
+            <span class="trophy-label">Platinum</span>
+          </div>
+          <div class="trophy-stat-card">
+            <span class="trophy-icon">🥇</span>
+            <span class="trophy-count">32</span>
+            <span class="trophy-label">Gold</span>
+          </div>
+          <div class="trophy-stat-card">
+            <span class="trophy-icon">🥈</span>
+            <span class="trophy-count">86</span>
+            <span class="trophy-label">Silver</span>
+          </div>
+          <div class="trophy-stat-card">
+            <span class="trophy-icon">🥉</span>
+            <span class="trophy-count">194</span>
+            <span class="trophy-label">Bronze</span>
+          </div>
+        </div>
+
+        <!-- Trophy Showcase Flyout Section -->
+        <div class="trophy-showcase-section">
+          <h3 class="trophy-showcase-title">🏆 Recent Platinum & Gold Trophies</h3>
+          <div class="trophy-showcase-list">
+            <div class="trophy-showcase-item">
+              <span class="trophy-badge-icon">🏆</span>
+              <div class="trophy-showcase-info">
+                <h4>Dedicated</h4>
+                <p>Marvel's Spider-Man 2 • Collect all Trophies</p>
+              </div>
+              <div class="trophy-showcase-meta">
+                <span class="trophy-rarity">0.8% Ultra Rare</span>
+                <span class="trophy-date">Sep 28, 2026</span>
+              </div>
+            </div>
+            <div class="trophy-showcase-item">
+              <span class="trophy-badge-icon">🥇</span>
+              <div class="trophy-showcase-info">
+                <h4>Final Destiny</h4>
+                <p>Black Myth: Wukong • Complete the Journey to the West</p>
+              </div>
+              <div class="trophy-showcase-meta">
+                <span class="trophy-rarity">1.2% Ultra Rare</span>
+                <span class="trophy-date">Oct 04, 2026</span>
+              </div>
+            </div>
+            <div class="trophy-showcase-item">
+              <span class="trophy-badge-icon">🏆</span>
+              <div class="trophy-showcase-info">
+                <h4>The Bear and the Wolf</h4>
+                <p>God of War Ragnarök • Collect all Trophies</p>
+              </div>
+              <div class="trophy-showcase-meta">
+                <span class="trophy-rarity">1.5% Ultra Rare</span>
+                <span class="trophy-date">Aug 14, 2026</span>
+              </div>
+            </div>
+            <div class="trophy-showcase-item">
+              <span class="trophy-badge-icon">🏆</span>
+              <div class="trophy-showcase-info">
+                <h4>Astro-Nomical!</h4>
+                <p>Astro Bot • Rescued all 300 VIP bots</p>
+              </div>
+              <div class="trophy-showcase-meta">
+                <span class="trophy-rarity">4.1% Very Rare</span>
+                <span class="trophy-date">Oct 10, 2026</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2b. Official Explore Hub Modal -->
+    <div id="ps5-explore-modal" class="ps5-modal-overlay">
+      <div class="ps5-modal-box explore-box" style="max-width: 880px;">
+        <div class="ps5-modal-header">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#818cf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+            </svg>
+            <h2>Explore • Official PlayStation Hub</h2>
+          </div>
+          <button class="modal-close-btn" data-close-overlay title="Close (○ Circle)">✕</button>
+        </div>
+        <div class="explore-featured-news">
+          <div class="news-pill">Official Announcement</div>
+          <h3>PlayStation 5 System Software 10.00 Live Worldwide</h3>
+          <p>Enhanced DualSense adaptive trigger customization, Personalized 3D Audio Profiles, and seamless Discord integration now available.</p>
+        </div>
+        <div class="explore-news-grid">
+          <div class="explore-news-card">
+            <span class="news-tag ps-plus">PlayStation Plus</span>
+            <h4>Monthly Games Drop Available Now</h4>
+            <p>Add top acclaimed titles to your game collection this month with your active subscription.</p>
+          </div>
+          <div class="explore-news-card">
+            <span class="news-tag patch">Patch Notes</span>
+            <h4>Marvel's Spider-Man 2 Update 1.004</h4>
+            <p>Added New Game+, Mission Replay, Time of Day settings, and Golden Gadget suit styles.</p>
+          </div>
+          <div class="explore-news-card">
+            <span class="news-tag tournament">Tournaments</span>
+            <h4>PlayStation Tournaments • Season 4</h4>
+            <p>Compete in weekly fight brackets on DualSense controllers to claim exclusive avatars.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. PlayStation Store Modal -->
+    <div id="ps5-store-modal" class="ps5-modal-overlay">
+      <div class="ps5-modal-box store-box">
+        <div class="ps5-modal-header">
+          <h2>PlayStation™Store</h2>
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <span style="font-size: 0.88rem; color: #10b981; font-weight: 700;">Wallet: $120.00</span>
+            <button class="modal-close-btn" data-close-overlay title="Close (○ Circle)">✕</button>
+          </div>
+        </div>
+        <div class="store-featured-banner">
+          <div class="banner-badge">Featured Collection</div>
+          <h3>PlayStation 5 Pro Enhanced • Next-Gen Visuals</h3>
+          <p>Experience ultra-high resolution ray tracing and 120 FPS performance across top blockbuster hits.</p>
+        </div>
+        <div class="store-grid">
+          <div class="store-item-card">
+            <div class="store-item-thumb" style="background-image: url('https://images.unsplash.com/photo-1635863138275-d9b33299680b?auto=format&fit=crop&w=400&q=80');">
+              <span class="store-tag">PS5 Pro</span>
+            </div>
+            <h4>Marvel's Spider-Man 2</h4>
+            <div class="store-price-row">
+              <span class="store-discount">-30%</span>
+              <span class="store-price">$48.99</span>
+            </div>
+          </div>
+          <div class="store-item-card">
+            <div class="store-item-thumb" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80');">
+              <span class="store-tag">GOTY</span>
+            </div>
+            <h4>Astro Bot</h4>
+            <div class="store-price-row">
+              <span class="store-price">$59.99</span>
+            </div>
+          </div>
+          <div class="store-item-card">
+            <div class="store-item-thumb" style="background-image: url('https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=400&q=80');">
+              <span class="store-tag">DLC Included</span>
+            </div>
+            <h4>Elden Ring: Shadow of the Erdtree</h4>
+            <div class="store-price-row">
+              <span class="store-discount">-40%</span>
+              <span class="store-price">$47.99</span>
+            </div>
+          </div>
+          <div class="store-item-card">
+            <div class="store-item-thumb" style="background-image: url('https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?auto=format&fit=crop&w=400&q=80');">
+              <span class="store-tag">PS Plus</span>
+            </div>
+            <h4>God of War Ragnarök</h4>
+            <div class="store-price-row">
+              <span class="store-price">Included with PS Plus</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Switcher Modal (Suspended Games) -->
+    <div id="ps5-switcher-modal" class="ps5-modal-overlay">
+      <div class="ps5-modal-box switcher-box">
+        <div class="ps5-modal-header">
+          <h2>Switcher</h2>
+          <button class="modal-close-btn" data-close-overlay title="Close (○ Circle)">✕</button>
+        </div>
+        <p style="color: var(--ps-white-60); margin-bottom: 20px; font-size: 0.9rem;">Fast-switch between suspended games stored in NVMe memory without losing progress.</p>
+        <div class="switcher-list">
+          <div class="switcher-item active">
+            <div class="switcher-thumb" style="background-image: url('https://images.unsplash.com/photo-1635863138275-d9b33299680b?auto=format&fit=crop&w=200&q=80');"></div>
+            <div class="switcher-info">
+              <h4>Marvel's Spider-Man 2</h4>
+              <p>Active Title • Fast Travel Ready</p>
+            </div>
+            <button class="btn-switcher-action" data-switch-to="spiderman2">Resume</button>
+          </div>
+          <div class="switcher-item">
+            <div class="switcher-thumb" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=200&q=80');"></div>
+            <div class="switcher-info">
+              <h4>Astro Bot</h4>
+              <p>Suspended in Memory • Gorilla Nebula</p>
+            </div>
+            <button class="btn-switcher-action" data-switch-to="astro-bot">Switch</button>
+          </div>
+          <div class="switcher-item">
+            <div class="switcher-thumb" style="background-image: url('https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?auto=format&fit=crop&w=200&q=80');"></div>
+            <div class="switcher-info">
+              <h4>God of War Ragnarök</h4>
+              <p>Suspended in Memory • Svartalfheim</p>
+            </div>
+            <button class="btn-switcher-action" data-switch-to="gow-ragnarok">Switch</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Notifications Hub Modal -->
+    <div id="ps5-notifications-modal" class="ps5-modal-overlay">
+      <div class="ps5-modal-box notify-box">
+        <div class="ps5-modal-header">
+          <h2>Notifications</h2>
+          <button class="modal-close-btn" data-close-overlay title="Close (○ Circle)">✕</button>
+        </div>
+        <div class="notify-list">
+          <div class="notify-item">
+            <div class="notify-icon trophy-gold">🏆</div>
+            <div class="notify-info">
+              <h4>Trophy Earned: The Great Protector</h4>
+              <p>Marvel's Spider-Man 2 • Completed Main Story</p>
+              <span class="notify-time">15m ago</span>
+            </div>
+          </div>
+          <div class="notify-item">
+            <div class="notify-icon dl-green">⬇️</div>
+            <div class="notify-info">
+              <h4>Download Complete: Update 1.004.000</h4>
+              <p>Installed to Console Storage and ready to play.</p>
+              <span class="notify-time">1h ago</span>
+            </div>
+          </div>
+          <div class="notify-item">
+            <div class="notify-icon party-blue">🎮</div>
+            <div class="notify-info">
+              <h4>Party Invite: Raid Squad</h4>
+              <p>Sarah invited you to voice chat.</p>
+              <span class="notify-time">2h ago</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Game Base Modal (Friends & Voice Chat) -->
+    <div id="ps5-gamebase-modal" class="ps5-modal-overlay">
+      <div class="ps5-modal-box gamebase-box">
+        <div class="ps5-modal-header">
+          <h2>Game Base</h2>
+          <button class="modal-close-btn" data-close-overlay title="Close (○ Circle)">✕</button>
+        </div>
+        <div class="party-status-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="font-weight: 800; font-size: 1.05rem;">Voice Party: Raid Squad (3/4)</div>
+            <span style="color: #10b981; font-size: 0.85rem; font-weight: 700;">● Connected</span>
+          </div>
+          <div class="party-members-row">
+            <div class="party-member-chip"><span>🎤</span> Sarah</div>
+            <div class="party-member-chip"><span>🎤</span> Alex</div>
+            <div class="party-member-chip"><span>🎤</span> Marcus</div>
+          </div>
+        </div>
+        <h4 style="margin: 20px 0 12px; color: var(--ps-white-60); font-size: 0.9rem;">Friends Online (8)</h4>
+        <div class="friends-list">
+          <div class="friend-item">
+            <span class="friend-dot online"></span>
+            <div class="friend-info">
+              <span class="friend-name">Sarah Connor</span>
+              <span class="friend-game">Playing Marvel's Spider-Man 2</span>
+            </div>
+          </div>
+          <div class="friend-item">
+            <span class="friend-dot online"></span>
+            <div class="friend-info">
+              <span class="friend-name">Alex Walker</span>
+              <span class="friend-game">Playing Astro Bot</span>
+            </div>
+          </div>
+          <div class="friend-item">
+            <span class="friend-dot online"></span>
+            <div class="friend-info">
+              <span class="friend-name">Marcus Vance</span>
+              <span class="friend-game">Playing Elden Ring</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Power Options Modal -->
+    <div id="ps5-power-modal" class="ps5-modal-overlay">
+      <div class="ps5-modal-box power-box">
+        <div class="ps5-modal-header">
+          <h2>Power Options</h2>
+          <button class="modal-close-btn" data-close-overlay title="Close (○ Circle)">✕</button>
+        </div>
+        <div class="power-buttons-list">
+          <button id="btn-power-rest" class="power-option-btn">
+            <div class="power-icon amber">🌙</div>
+            <div class="power-text">
+              <h3>Enter Rest Mode</h3>
+              <p>Keep games suspended, charge controllers, and download updates.</p>
+            </div>
+          </button>
+          <button id="btn-power-restart" class="power-option-btn">
+            <div class="power-icon blue">🔄</div>
+            <div class="power-text">
+              <h3>Restart PS5</h3>
+              <p>Reboot PlayStation 5 system software.</p>
+            </div>
+          </button>
+          <button id="btn-power-off" class="power-option-btn">
+            <div class="power-icon red">⏻</div>
+            <div class="power-text">
+              <h3>Turn Off PS5</h3>
+              <p>Close all open games and power off console.</p>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. Game Options Context Menu (Square □) -->
+    <div id="ps5-options-menu" class="ps5-modal-overlay">
+      <div class="ps5-options-flyout">
+        <div class="options-flyout-header">
+          <span>Options</span>
+          <button class="modal-close-btn" data-close-overlay>✕</button>
+        </div>
+        <div class="options-actions-list">
+          <button id="opt-btn-close-game" class="opt-action-btn" style="color: #f87171; border-color: rgba(239, 68, 68, 0.4); font-weight: 800;">
+            ⏹ Close Game (Exit to Windows)
+          </button>
+          <button class="opt-action-btn" onclick="alert('Checking PlayStation Network for updates...\nThe game is up to date (Version 1.004.000).')">
+            Check for Update
+          </button>
+          <button class="opt-action-btn" onclick="alert('Manage Game Content:\n• Story Mode (86.4 GB - Installed)\n• New Game+ DLC (Free - Installed)\n• 4K Texture Pack (Installed)')">
+            Manage Game Content
+          </button>
+          <button class="opt-action-btn" onclick="alert('Trophy Progress:\n84% Completed • 1 Platinum, 6 Gold, 14 Silver, 28 Bronze')">
+            View Trophies
+          </button>
+          <button class="opt-action-btn" onclick="alert('Cloud Storage Sync:\nSaved Data Synchronized with PlayStation Plus Cloud.')">
+            Upload/Download Saved Data
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. PlayStation 5 Game Library Modal (Installed & Cloud Collection with PC Game Sync) -->
+    <div id="ps5-library-modal" class="ps5-library-modal">
+      <div class="lib-header">
+        <div class="lib-header-left">
+          <h1 class="lib-title">Game Library</h1>
+          <div class="lib-storage-pill">
+            <span>💾 Console & PC Storage: 1.2 TB Free</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <button id="btn-sync-pc-games" class="lib-btn-action" style="padding: 10px 20px; border-radius: 999px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #60a5fa; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+            </svg>
+            <span>Sync PC Games</span>
+          </button>
+          <button id="library-btn-close" class="lib-btn-close" title="Close (○ Circle)">✕</button>
+        </div>
+      </div>
+
+      <div class="lib-tabs-row">
+        <button id="lib-tab-all" class="lib-tab active">All Games</button>
+        <button id="lib-tab-installed" class="lib-tab">Installed Games</button>
+        <button id="lib-tab-collection" class="lib-tab">Your Collection (Owned on Steam)</button>
+      </div>
+
+      <div id="library-games-grid" class="lib-games-grid">
+        <!-- Populated dynamically by carousel.js -->
+      </div>
+    </div>
+
+    <!-- 10. PS5 Startup Boot Animations Modal -->
+    <div id="ps5-boot-themes-modal" class="ps5-modal-overlay">
+      <div class="ps5-modal-box" style="max-width: 840px; width: 92%;">
+        <div class="ps5-modal-header">
+          <div>
+            <h2>Startup Boot Animations</h2>
+            <p style="color: var(--ps-white-60); font-size: 0.88rem; margin: 4px 0 0;">Preview and select official PlayStation 5 opening animation editions</p>
+          </div>
+          <button class="modal-close-btn" data-close-overlay title="Close (○ Circle)">✕</button>
+        </div>
+        <div class="boot-themes-grid" id="boot-themes-grid">
+          <!-- Dynamically populated by boot-screen.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Power Blackout / Restart Overlay -->
+    <div id="ps5-power-blackout" class="ps5-power-blackout">
+      <div class="blackout-spinner"></div>
+      <h2 id="ps5-power-label">Restarting your PS5...</h2>
+      <p id="ps5-power-sublabel" class="ps5-power-sublabel">Don't unplug the AC power cord when the power indicator on your PS5 is lit or blinking.</p>
+    </div>
+  </div>
+
+  <!-- Entry Script -->
+  <script type="module" src="./src/scripts/main.js"></script>
+</body>
+</html>

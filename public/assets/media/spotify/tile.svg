@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <filter id="tileShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#000000" flood-opacity="0.4"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#1ed760" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="96" fill="#14141c"/>
+
+  <!-- Centered Spotify Disc -->
+  <g filter="url(#tileShadow)" transform="translate(96, 96)">
+    <!-- Green circle -->
+    <circle cx="160" cy="160" r="160" fill="#1ed760"/>
+    <!-- Black soundwaves -->
+    <path d="M233 115 c-44 -26 -117 -28 -159 -16 -7 2 -14 -2 -16 -9 -2 -7 2 -14 9 -16 48 -15 129 -12 180 18 6 4 8 12 5 18 -4 6 -12 8 -19 5 z" fill="#121212"/>
+    <path d="M214 163 c-36 -22 -92 -28 -135 -15 -6 2 -12 -2 -14 -7 -2 -6 2 -12 7 -14 49 -15 110 -8 152 17 5 3 7 10 4 15 -3 6 -10 7 -14 4 z" fill="#121212"/>
+    <path d="M195 210 c-30 -18 -68 -23 -112 -13 -5 1 -10 -2 -11 -7 -1 -5 2 -10 7 -11 49 -11 91 -6 125 15 5 3 6 9 3 14 -3 5 -9 6 -12 2 z" fill="#121212"/>
+  </g>
+</svg>

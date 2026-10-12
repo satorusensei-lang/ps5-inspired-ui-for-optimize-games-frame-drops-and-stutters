@@ -1,0 +1,47 @@
+/* ==========================================================================
+   PlayStation 5 Design System Tokens & Variables
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Space+Grotesk:wght@400..700&display=swap');
+
+:root {
+  /* Official PlayStation Palette — Natural, Refined, Authentic */
+  --ps-blue: #00439c;
+  --ps-blue-light: #0070d1;
+  --ps-blue-glow: rgba(255, 255, 255, 0.45);
+  --ps-cyan: #e2e8f0;
+  --ps-white: #ffffff;
+  --ps-white-90: rgba(255, 255, 255, 0.9);
+  --ps-white-60: rgba(255, 255, 255, 0.6);
+  --ps-white-40: rgba(255, 255, 255, 0.4);
+  --ps-white-20: rgba(255, 255, 255, 0.2);
+  --ps-white-10: rgba(255, 255, 255, 0.1);
+  --ps-white-05: rgba(255, 255, 255, 0.05);
+
+  --ps-dark-bg: #060709;
+  --ps-card-bg: rgba(18, 19, 24, 0.68);
+  --ps-card-border: rgba(255, 255, 255, 0.12);
+  --ps-card-hover: rgba(255, 255, 255, 0.2);
+  --ps-card-focus-glow: 0 0 0 2px #ffffff, 0 8px 30px rgba(0, 0, 0, 0.85), 0 0 20px rgba(255, 255, 255, 0.45);
+
+  --ps-gold: #f59e0b;
+  --ps-silver: #94a3b8;
+  --ps-bronze: #d97706;
+  --ps-platinum: #e2e8f0;
+  --ps-dualsense-amber: #f97316;
+
+  /* Typography */
+  --ps-font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ps-font-heading: 'Space Grotesk', var(--ps-font);
+
+  /* Animation Easing */
+  --ps-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ps-smooth: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ps-fast: 180ms var(--ps-smooth);
+  --ps-normal: 320ms var(--ps-smooth);
+
+  /* Frosted Glassmorphism & Blur Tokens */
+  --ps-header-glass-bg: linear-gradient(180deg, rgba(6, 7, 10, 0.85) 0%, rgba(6, 7, 10, 0.55) 50%, rgba(6, 7, 10, 0.18) 80%, transparent 100%);
+  --ps-header-blur: blur(28px) saturate(120%);
+  --ps-glow-subtle: 0 0 16px rgba(255, 255, 255, 0.35);
+}
