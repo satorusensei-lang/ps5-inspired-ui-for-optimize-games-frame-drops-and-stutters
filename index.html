@@ -117,6 +117,19 @@
 
         <!-- Live Digital Clock -->
         <div id="ps5-live-clock" class="ps5-clock">12:00 PM</div>
+
+        <!-- Desktop Window Controls (Visible only in Electron) -->
+        <div id="ps5-desktop-controls" class="ps5-desktop-controls" style="display: none;">
+          <button id="win-btn-minimize" class="win-btn" title="Minimize Window">
+            <svg viewBox="0 0 12 12" width="11" height="11"><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.8"/></svg>
+          </button>
+          <button id="win-btn-maximize" class="win-btn" title="Maximize Window">
+            <svg viewBox="0 0 12 12" width="11" height="11"><rect x="1.5" y="1.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+          </button>
+          <button id="win-btn-close" class="win-btn win-btn-close" title="Exit PlayStation 5">
+            <svg viewBox="0 0 12 12" width="11" height="11"><line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" stroke-width="1.8"/><line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width="1.8"/></svg>
+          </button>
+        </div>
       </div>
     </header>
 

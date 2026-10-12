@@ -47,9 +47,13 @@ export function initGameLauncher() {
         return;
       }
       if (!item.installed && item.appId) {
-        try {
-          window.location.href = `steam://install/${item.appId}`;
-        } catch (e) {}
+        if (window.electronAPI?.launchGame) {
+          window.electronAPI.launchGame({ uri: `steam://install/${item.appId}`, title: item.title });
+        } else {
+          try {
+            window.location.href = `steam://install/${item.appId}`;
+          } catch (e) {}
+        }
         window.dispatchEvent(new CustomEvent('ps5-show-notification', {
           detail: {
             title: `📥 Download Started: ${item.title}`,

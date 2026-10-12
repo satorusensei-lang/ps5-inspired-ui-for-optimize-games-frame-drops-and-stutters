@@ -147,6 +147,65 @@
   text-align: right;
 }
 
+/* Electron Desktop Native Window Support */
+body.is-desktop-app .ps5-header {
+  -webkit-app-region: drag;
+}
+
+body.is-desktop-app .ps5-tab,
+body.is-desktop-app .ps5-icon-btn,
+body.is-desktop-app .ps5-profile-btn,
+body.is-desktop-app .controller-status-badge,
+body.is-desktop-app .ps5-desktop-controls,
+body.is-desktop-app button {
+  -webkit-app-region: no-drag;
+}
+
+.ps5-desktop-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 10px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(14px);
+  padding: 3px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: opacity 0.25s ease;
+}
+
+body.is-fullscreen .ps5-desktop-controls {
+  opacity: 0.15;
+}
+
+body.is-fullscreen .ps5-desktop-controls:hover {
+  opacity: 1;
+}
+
+.win-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.win-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.win-btn-close:hover {
+  background: #e11d48;
+  color: #fff;
+}
+
 /* ==========================================================================
    Carousel Tile Strip
    ========================================================================== */

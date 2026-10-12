@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initControllerInput();
   initOverlays();
   initBootScreen();
+  initDesktopControls();
 
   // First user interaction initializes Web Audio API context and begins ambient soundscape
   const unlockAudio = () => {
@@ -35,3 +36,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   console.log("🎮 PlayStation 5 PC Dashboard Loaded Successfully!");
 });
+
+function initDesktopControls() {
+  if (typeof window !== 'undefined' && window.electronAPI) {
+    document.body.classList.add('is-desktop-app');
+    const controls = document.getElementById('ps5-desktop-controls');
+    if (controls) controls.style.display = 'inline-flex';
+
+    document.getElementById('win-btn-minimize')?.addEventListener('click', () => {
+      window.electronAPI.minimizeWindow?.();
+    });
+    document.getElementById('win-btn-maximize')?.addEventListener('click', () => {
+      window.electronAPI.maximizeWindow?.();
+    });
+    document.getElementById('win-btn-close')?.addEventListener('click', () => {
+      window.electronAPI.closeWindow?.();
+    });
+
+    const fsBtn = document.getElementById('btn-header-fullscreen');
+    if (fsBtn) {
+      fsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.electronAPI.toggleFullscreen?.();
+      });
+    }
+
+    window.electronAPI.onFullscreenChange?.((isFullscreen) => {
+      document.body.classList.toggle('is-fullscreen', isFullscreen);
+    });
+  }
+}

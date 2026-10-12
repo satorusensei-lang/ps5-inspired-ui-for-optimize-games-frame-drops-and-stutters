@@ -13,8 +13,32 @@ export async function launchPCApp(item) {
 
   let launched = false;
 
-  // 2. Try launching via local Vite OS middleware
-  if (item.execPath || item.launchUri) {
+  // 2. Direct Native Electron Desktop Launch (Zero sandbox / instant execution)
+  if (window.electronAPI?.launchGame) {
+    try {
+      const res = await window.electronAPI.launchGame({
+        execPath: item.execPath,
+        uri: item.launchUri,
+        appId: item.appId,
+        title: item.title,
+        args: item.execArgs || item.args || ''
+      });
+      if (res?.success) {
+        launched = true;
+        window.dispatchEvent(new CustomEvent('ps5-show-notification', {
+          detail: {
+            title: `🚀 Launched: ${item.title}`,
+            subtitle: "Game is running natively on Windows! DualSense controller active."
+          }
+        }));
+      }
+    } catch (err) {
+      console.warn("Electron native launch error:", err);
+    }
+  }
+
+  // 3. Fallback to local Vite OS middleware
+  if (!launched && (item.execPath || item.launchUri)) {
     try {
       const res = await fetch('/api/pc/launch', {
         method: 'POST',
@@ -69,6 +93,25 @@ export async function closePCApp(item) {
 
   // 1. Play signature cancel chime
   ps5Audio.playBackCancel();
+
+  // Native Electron Close
+  if (window.electronAPI?.closeGame) {
+    try {
+      await window.electronAPI.closeGame({
+        execPath: item.execPath,
+        title: item.title
+      });
+      window.dispatchEvent(new CustomEvent('ps5-show-notification', {
+        detail: {
+          title: `🛑 Closed: ${item.title}`,
+          subtitle: "Game closed on Windows. GPU & RAM resources freed."
+        }
+      }));
+      return { success: true };
+    } catch (e) {
+      console.warn("Electron native close error:", e);
+    }
+  }
 
   try {
     const res = await fetch('/api/pc/close', {
