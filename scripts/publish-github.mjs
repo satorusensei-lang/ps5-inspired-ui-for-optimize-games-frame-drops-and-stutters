@@ -103,6 +103,58 @@ async function githubApi(url, token, options = {}) {
   return json;
 }
 
+async function uploadReleaseAsset({ uploadBase, filePath, token }) {
+  const fileName = path.basename(filePath);
+  const stat = fs.statSync(filePath);
+  const targetUrl = `${uploadBase}?name=${encodeURIComponent(fileName)}`;
+  console.log(`[Release] Uploading ${fileName} (${(stat.size / (1024 * 1024)).toFixed(2)} MB)...`);
+
+  // Use curl.exe streaming upload when available so large 170MB+ EXEs don't hit Node fetch body timeouts
+  const curlCmd = process.platform === 'win32' ? 'curl.exe' : 'curl';
+  try {
+    execFileSync(curlCmd, ['--version'], { stdio: 'ignore' });
+    const configLines = [
+      `url = "${targetUrl}"`,
+      `header = "Authorization: Bearer ${token}"`,
+      `header = "Accept: application/vnd.github+json"`,
+      `header = "X-GitHub-Api-Version: 2022-11-28"`,
+      `header = "User-Agent: myraa-release-publisher"`,
+      `header = "Content-Type: application/octet-stream"`,
+      `upload-file = "${filePath.replace(/\\/g, '/')}"`
+    ].join('\n');
+
+    const responseText = execFileSync(
+      curlCmd,
+      ['-sS', '-f', '--http1.1', '--retry', '3', '--retry-delay', '3', '-X', 'POST', '-K', '-'],
+      {
+        input: configLines,
+        stdio: ['pipe', 'pipe', 'pipe'],
+        encoding: 'utf8',
+        maxBuffer: 10 * 1024 * 1024
+      }
+    );
+    const uploaded = JSON.parse(responseText || '{}');
+    if (!uploaded?.browser_download_url) {
+      throw new Error(`Unexpected GitHub upload response for ${fileName}: ${responseText}`);
+    }
+    return uploaded;
+  } catch (curlErr) {
+    if (curlErr?.code === 'ENOENT') {
+      const buffer = fs.readFileSync(filePath);
+      return githubApi(targetUrl, token, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'Content-Length': String(buffer.length)
+        },
+        body: buffer
+      });
+    }
+    const detail = curlErr?.stderr ? String(curlErr.stderr).trim() : (curlErr?.message || String(curlErr));
+    throw new Error(`Upload failed for ${fileName}: ${detail}`);
+  }
+}
+
 async function upsertReleaseAndUpload({ repoSlug, version, sha, exePath, blockmapPath, token }) {
   const apiBase = `https://api.github.com/repos/${repoSlug}`;
   const commitShort = sha.slice(0, 7);
@@ -176,18 +228,7 @@ async function upsertReleaseAndUpload({ repoSlug, version, sha, exePath, blockma
   if (blockmapName) filesToUpload.push(blockmapPath);
 
   for (const filePath of filesToUpload) {
-    const fileName = path.basename(filePath);
-    const stat = fs.statSync(filePath);
-    console.log(`[Release] Uploading ${fileName} (${(stat.size / (1024 * 1024)).toFixed(2)} MB)...`);
-    const buffer = fs.readFileSync(filePath);
-    const uploaded = await githubApi(`${uploadBase}?name=${encodeURIComponent(fileName)}`, token, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/octet-stream',
-        'Content-Length': String(buffer.length)
-      },
-      body: buffer
-    });
+    const uploaded = await uploadReleaseAsset({ uploadBase, filePath, token });
     console.log(`[Release] Uploaded asset: ${uploaded.browser_download_url}`);
   }
 }

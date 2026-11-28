@@ -45,7 +45,7 @@ jobs:
           node scripts/verify-steam-download-snapshot.mjs
 
       - name: Build Windows NSIS installer (.exe)
-        run: npm run dist:win
+        run: npm run dist:win -- --publish never
 
       - name: Publish updated installer to GitHub Release (ps5)
         shell: pwsh
