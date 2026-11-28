@@ -54,6 +54,12 @@ jobs:
           REPO: ${{ github.repository }}
           COMMIT_SHA: ${{ github.sha }}
         run: |
+          $ErrorActionPreference = 'Stop'
+          $repo = $env:REPO
+          $commitSha = $env:COMMIT_SHA
+          if ([string]::IsNullOrWhiteSpace($repo)) { throw "REPO env var is empty" }
+          $shortSha = if ($commitSha -and $commitSha.Length -ge 7) { $commitSha.Substring(0, 7) } else { 'unknown' }
+
           $pkg = Get-Content package.json -Raw | ConvertFrom-Json
           $version = $pkg.version
           $tag = 'ps5'
@@ -64,36 +70,40 @@ jobs:
           }
 
           $notes = @"
-          Automated Windows x64 build for **MYRAA v$version** (commit ``$($COMMIT_SHA.Substring(0, 7))``).
+          Automated Windows x64 build for **MYRAA v$version** (commit ``$shortSha``).
 
           ### Highlights
           - Xbox ownership verified via Windows Store entitlements (excludes unowned Game Pass catalog titles, DLC/add-ons, trials, and redundant launcher/platform cards)
           - Strict Steam Favorites-only sync with download progress & pause/resume
           - Nixxes / multi-stage pre-launcher window focus & handoff handling (Spider-Man, Ghost of Tsushima, etc.)
-          - Smooth 120 FPS carousel gliding, keyboard (`A`/`D`, Arrows, `Home`/`End`) & controller navigation
+          - Smooth 120 FPS carousel gliding, keyboard (``A``/``D``, Arrows, ``Home``/``End``) & controller navigation
           "@
 
           $exists = $true
-          try {
-            gh release view $tag --repo $REPO *> $null
-            if ($LASTEXITCODE -ne 0) { $exists = $false }
-          } catch {
-            $exists = $false
-          }
+          $prevPref = $ErrorActionPreference
+          $ErrorActionPreference = 'Continue'
+          gh release view $tag --repo $repo *> $null
+          if ($LASTEXITCODE -ne 0) { $exists = $false }
+          $ErrorActionPreference = $prevPref
 
           if (-not $exists) {
-            gh release create $tag --repo $REPO --target main --title "ps5(performance and stability enhancer)" --notes $notes
+            gh release create $tag --repo $repo --target main --title "ps5(performance and stability enhancer)" --notes $notes
+            if ($LASTEXITCODE -ne 0) { throw "gh release create failed with exit code $LASTEXITCODE" }
           } else {
             # Remove older setup executables before uploading the newly built installer
-            $relJson = gh release view $tag --repo $REPO --json assets | ConvertFrom-Json
+            $relJson = gh release view $tag --repo $repo --json assets | ConvertFrom-Json
+            if ($LASTEXITCODE -ne 0) { throw "gh release view failed with exit code $LASTEXITCODE" }
             foreach ($asset in $relJson.assets) {
               if ($asset.name -match '\.(exe|blockmap|zip)$' -and $asset.name -ne (Split-Path $exePath -Leaf) -and $asset.name -ne (Split-Path $blockmapPath -Leaf)) {
-                gh release delete-asset $tag $asset.name --repo $REPO --yes
+                gh release delete-asset $tag $asset.name --repo $repo --yes
+                if ($LASTEXITCODE -ne 0) { throw "gh release delete-asset failed for $($asset.name)" }
               }
             }
-            gh release edit $tag --repo $REPO --target main --title "ps5(performance and stability enhancer)" --notes $notes
+            gh release edit $tag --repo $repo --target main --title "ps5(performance and stability enhancer)" --notes $notes
+            if ($LASTEXITCODE -ne 0) { throw "gh release edit failed with exit code $LASTEXITCODE" }
           }
 
           $uploadFiles = @($exePath)
           if (Test-Path $blockmapPath) { $uploadFiles += $blockmapPath }
-          gh release upload $tag @uploadFiles --repo $REPO --clobber
+          gh release upload $tag @uploadFiles --repo $repo --clobber
+          if ($LASTEXITCODE -ne 0) { throw "gh release upload failed with exit code $LASTEXITCODE" }
