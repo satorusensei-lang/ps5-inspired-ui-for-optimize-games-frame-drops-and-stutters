@@ -3,14 +3,24 @@ node_modules/
 .pnp
 .pnp.js
 
-# Production build
+# Production build & Windows installer outputs
 dist/
 dist-ssr/
+build/
+release/
+*.exe
+*.blockmap
 
-# Backups
+# Runtime caches, shortcuts & local investigation scratch
+public/assets/cache/
+scratch/
 backups/
 *.zip
 *.tar.gz
+*.lnk
+LICENSES.chromium.html
+256
+280
 
 # Environment & Logs
 .env
@@ -30,7 +40,9 @@ Thumbs.db
 .idea/
 
 # Agent IDE metadata
-.agents/
+.agents/*
+!.agents/rules/
+!.agents/rules/*.md
 .claude/
 .codex/
 .cursor/

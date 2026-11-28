@@ -1,0 +1,99 @@
+name: Build & Release Windows Installer
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.js'
+      - 'electron/**'
+      - 'src/**'
+      - 'public/**'
+      - 'scripts/**'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows-release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify project grounding & tests
+        run: |
+          npm run verify:agent
+          node scripts/verify-steam-download-snapshot.mjs
+
+      - name: Build Windows NSIS installer (.exe)
+        run: npm run dist:win
+
+      - name: Publish updated installer to GitHub Release (ps5)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          $pkg = Get-Content package.json -Raw | ConvertFrom-Json
+          $version = $pkg.version
+          $tag = 'ps5'
+          $exePath = "release/MYRAA-PS5-Setup-$version.exe"
+          $blockmapPath = "$exePath.blockmap"
+          if (-not (Test-Path $exePath)) {
+            throw "Expected installer not found at $exePath"
+          }
+
+          $notes = @"
+          Automated Windows x64 build for **MYRAA v$version** (commit ``$($COMMIT_SHA.Substring(0, 7))``).
+
+          ### Highlights
+          - Xbox ownership verified via Windows Store entitlements (excludes unowned Game Pass catalog titles, DLC/add-ons, trials, and redundant launcher/platform cards)
+          - Strict Steam Favorites-only sync with download progress & pause/resume
+          - Nixxes / multi-stage pre-launcher window focus & handoff handling (Spider-Man, Ghost of Tsushima, etc.)
+          - Smooth 120 FPS carousel gliding, keyboard (`A`/`D`, Arrows, `Home`/`End`) & controller navigation
+          "@
+
+          $exists = $true
+          try {
+            gh release view $tag --repo $REPO *> $null
+            if ($LASTEXITCODE -ne 0) { $exists = $false }
+          } catch {
+            $exists = $false
+          }
+
+          if (-not $exists) {
+            gh release create $tag --repo $REPO --target main --title "ps5(performance and stability enhancer)" --notes $notes
+          } else {
+            # Remove older setup executables before uploading the newly built installer
+            $relJson = gh release view $tag --repo $REPO --json assets | ConvertFrom-Json
+            foreach ($asset in $relJson.assets) {
+              if ($asset.name -match '\.(exe|blockmap|zip)$' -and $asset.name -ne (Split-Path $exePath -Leaf) -and $asset.name -ne (Split-Path $blockmapPath -Leaf)) {
+                gh release delete-asset $tag $asset.name --repo $REPO --yes
+              }
+            }
+            gh release edit $tag --repo $REPO --target main --title "ps5(performance and stability enhancer)" --notes $notes
+          }
+
+          $uploadFiles = @($exePath)
+          if (Test-Path $blockmapPath) { $uploadFiles += $blockmapPath }
+          gh release upload $tag @uploadFiles --repo $REPO --clobber

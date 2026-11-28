@@ -75,8 +75,8 @@ export const INITIAL_PS5_MEDIA_APPS = [
     title: "Netflix",
     studio: "Netflix Inc. • Dolby Atmos & 4K",
     genre: "Movies & TV Series",
-    logoImg: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Netflix_2015_logo.svg/512px-Netflix_2015_logo.svg.png",
-    tileIcon: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Netflix_icon.svg/512px-Netflix_icon.svg.png",
+    logoImg: "/assets/media/netflix/logo.svg",
+    tileIcon: "/assets/media/netflix/tile.svg",
     heroBg: "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=1920&q=80",
     badge: "Not Installed",
     installed: false,
@@ -95,8 +95,8 @@ export const INITIAL_PS5_MEDIA_APPS = [
     title: "Discord Voice & Communities",
     studio: "Discord Inc. • Cross-Play Voice Chat",
     genre: "Communication & Guilds",
-    logoImg: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Discord_logo.svg/512px-Discord_logo.svg.png",
-    tileIcon: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Discord_app_icon_%282021%29.svg/512px-Discord_app_icon_%282021%29.svg.png",
+    logoImg: "/assets/media/discord/logo.svg",
+    tileIcon: "/assets/media/discord/tile.svg",
     heroBg: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1920&q=80",
     badge: "Not Installed",
     installed: false,
@@ -109,6 +109,26 @@ export const INITIAL_PS5_MEDIA_APPS = [
       { id: "dsc1", title: "Raid Squad Voice Server", tag: "Guild", progress: 100, timeEst: "Download App" }
     ],
     liveStatus: "Not Installed • 1.2 GB Download Required"
+  },
+  {
+    id: "twitch",
+    title: "Twitch",
+    studio: "Twitch Interactive • Live Broadcasts",
+    genre: "Live Streaming & Esports",
+    logoImg: "/assets/media/twitch/logo.svg",
+    tileIcon: "/assets/media/twitch/tile.svg",
+    heroBg: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1920&q=80",
+    badge: "Not Installed",
+    installed: false,
+    installSize: "890 MB",
+    storageType: "Ready to Download",
+    playTime: "85 hours",
+    trophies: null,
+    friends: "12 channels live",
+    activities: [
+      { id: "tw1", title: "PlayStation Tournaments Live", tag: "Broadcast", progress: 100, timeEst: "Watch" }
+    ],
+    liveStatus: "Not Installed • 890 MB Download Required"
   }
 ];
 

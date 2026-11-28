@@ -4,25 +4,75 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Space+Grotesk:wght@400..700&display=swap');
 
+/* Official Sony PlayStation 5 SST Typeface */
+@font-face {
+  font-family: 'SST';
+  src: url('/fonts/sst/SSTLight.TTF') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SST';
+  src: url('/fonts/sst/SSTRg.TTF') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SST';
+  src: url('/fonts/sst/SSTMedium.TTF') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SST';
+  src: url('/fonts/sst/SSTBold.TTF') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SST';
+  src: url('/fonts/sst/SSTHeavy.TTF') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* Official PlayStation Palette — Natural, Refined, Authentic */
   --ps-blue: #00439c;
   --ps-blue-light: #0070d1;
-  --ps-blue-glow: rgba(255, 255, 255, 0.45);
-  --ps-cyan: #e2e8f0;
+  --ps-blue-glow: rgba(0, 112, 209, 0.45);
+  --ps-cyan: #38bdf8;
   --ps-white: #ffffff;
   --ps-white-90: rgba(255, 255, 255, 0.9);
+  --ps-white-80: rgba(255, 255, 255, 0.8);
   --ps-white-60: rgba(255, 255, 255, 0.6);
   --ps-white-40: rgba(255, 255, 255, 0.4);
   --ps-white-20: rgba(255, 255, 255, 0.2);
+  --ps-white-15: rgba(255, 255, 255, 0.15);
   --ps-white-10: rgba(255, 255, 255, 0.1);
   --ps-white-05: rgba(255, 255, 255, 0.05);
 
+  /* DualSense Face Glyphs */
+  --ps-cross: #60a5fa;
+  --ps-circle: #f87171;
+  --ps-triangle: #34d399;
+  --ps-square: #f472b6;
+  --ps-plus-gold: #facc15;
+
   --ps-dark-bg: #060709;
-  --ps-card-bg: rgba(18, 19, 24, 0.68);
+  --ps-card-bg: rgba(18, 20, 28, 0.76);
   --ps-card-border: rgba(255, 255, 255, 0.12);
   --ps-card-hover: rgba(255, 255, 255, 0.2);
-  --ps-card-focus-glow: 0 0 0 2px #ffffff, 0 8px 30px rgba(0, 0, 0, 0.85), 0 0 20px rgba(255, 255, 255, 0.45);
+  --ps-card-focus-glow: 0 0 0 3px #ffffff, 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 28px rgba(255, 255, 255, 0.45);
 
   --ps-gold: #f59e0b;
   --ps-silver: #94a3b8;
@@ -30,18 +80,18 @@
   --ps-platinum: #e2e8f0;
   --ps-dualsense-amber: #f97316;
 
-  /* Typography */
-  --ps-font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --ps-font-heading: 'Space Grotesk', var(--ps-font);
+  /* Typography — Sony PlayStation Official SST Typeface with fallback */
+  --ps-font: 'SST', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ps-font-heading: 'SST', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   /* Animation Easing */
   --ps-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --ps-smooth: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --ps-fast: 180ms var(--ps-smooth);
-  --ps-normal: 320ms var(--ps-smooth);
+  --ps-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --ps-fast: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  --ps-normal: 320ms cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Frosted Glassmorphism & Blur Tokens */
-  --ps-header-glass-bg: linear-gradient(180deg, rgba(6, 7, 10, 0.85) 0%, rgba(6, 7, 10, 0.55) 50%, rgba(6, 7, 10, 0.18) 80%, transparent 100%);
-  --ps-header-blur: blur(28px) saturate(120%);
+  --ps-header-glass-bg: linear-gradient(180deg, rgba(4, 5, 8, 0.82) 0%, rgba(4, 5, 8, 0.42) 60%, transparent 100%);
+  --ps-header-blur: blur(20px) saturate(130%);
   --ps-glow-subtle: 0 0 16px rgba(255, 255, 255, 0.35);
 }

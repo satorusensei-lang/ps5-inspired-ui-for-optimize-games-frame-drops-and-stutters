@@ -53,20 +53,20 @@ export const INITIAL_PC_ITEMS = [
     tileIcon: "/assets/games/valorant/ps5_master.png",
     heroBg: "/assets/games/valorant/ps5_gamehub_cover.png",
     logoImg: "/assets/games/valorant/ps5_logo.svg",
-    badge: "Laptop PC",
-    installed: true,
+    badge: "Owned",
+    installed: false,
     installSize: "45.2 GB",
-    storageType: "Laptop SSD (Riot Games)",
-    playTime: "128 hours",
+    storageType: "Riot Games (Ready to Install)",
+    playTime: "Ready to Install",
     execPath: "C:\\Riot Games\\Riot Client\\RiotClientServices.exe",
     execArgs: "--launch-product=valorant --launch-patchline=live",
-    launchUri: "",
+    launchUri: "https://playvalorant.com/",
     activities: [
-      { id: "val1", title: "Competitive Matchmaking: Radiant Ranked", tag: "Ranked", progress: 85, timeEst: "Launch on PC" },
-      { id: "val2", title: "Swiftplay & Spike Rush Warmup", tag: "Casual", progress: 100, timeEst: "Launch on PC" },
-      { id: "val3", title: "Premier Tournament Stage", tag: "Esports", progress: 50, timeEst: "Ready" }
+      { id: "val1", title: "Download VALORANT", tag: "Riot Games", progress: 0, timeEst: "Install" },
+      { id: "val2", title: "Competitive Matchmaking", tag: "Ranked", progress: 85, timeEst: "Install" },
+      { id: "val3", title: "Premier Tournament Stage", tag: "Esports", progress: 50, timeEst: "Install" }
     ],
-    liveStatus: "Installed on Laptop • Low Latency 240FPS Vanguard Active"
+    liveStatus: "Owned on Riot Games • Ready to Install"
   },
   {
     id: "pc_steam_launcher",
@@ -108,25 +108,7 @@ export const INITIAL_PC_ITEMS = [
     ],
     liveStatus: "Installed on Laptop • Open Xbox Windows App"
   },
-  {
-    id: "pc_wallpaper_engine",
-    title: "Wallpaper Engine",
-    studio: "Kristjan Skutta • Steam Software",
-    genre: "Live Wallpapers & Audio Visualizer",
-    tileIcon: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=400&q=80",
-    heroBg: "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=1600&q=80",
-    badge: "Laptop App",
-    installed: true,
-    installSize: "850 MB",
-    storageType: "Laptop SSD",
-    playTime: "Background",
-    execPath: "C:\\Program Files (x86)\\Steam\\steamapps\\common\\wallpaper_engine\\launcher.exe",
-    launchUri: "steam://rungameid/431960",
-    activities: [
-      { id: "we1", title: "Open Wallpaper Engine Settings", tag: "Utility", progress: 100, timeEst: "Instant" }
-    ],
-    liveStatus: "Active on Laptop • Interactive Live Desktops"
-  },
+
   {
     id: "pc_file_explorer",
     title: "File Explorer & Drives",

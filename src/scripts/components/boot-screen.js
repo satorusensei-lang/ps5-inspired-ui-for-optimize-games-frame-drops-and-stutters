@@ -12,7 +12,8 @@
    ========================================================================== */
 
 import { ps5Audio } from '../audio/ps5-audio.js';
-import { syncPCGames } from './carousel.js';
+import { isSetupCompleted, showSetupScreen, setSetupCompleted } from './profile-manager.js';
+import { closeControlCenter } from './control-center.js';
 
 export const PS5_BOOT_THEMES = {
   'cosmos-gold': {
@@ -134,6 +135,45 @@ let isRestMode = false;
 let isPreviewing = false;
 let animationFrameId = null;
 let restModeEnterTime = 0;
+let bootStartTime = 0;
+let triggerBootAudioFn = null;
+
+export function isBootScreenActive() {
+  if (typeof document !== 'undefined') {
+    const bootScreen = document.getElementById('ps5-boot-screen');
+    if (bootScreen && bootScreen.classList.contains('hidden')) {
+      if (!isRestMode && !isPreviewing) isBootFinished = true;
+      return false;
+    }
+  }
+  return (!isBootFinished && !isRestMode) || isPreviewing;
+}
+
+export function skipBootScreen() {
+  const bootScreen = document.getElementById('ps5-boot-screen');
+  if (!bootScreen) return false;
+
+  if (isPreviewing) {
+    isPreviewing = false;
+    completeBoot(bootScreen);
+    currentThemeId = localStorage.getItem('ps5_boot_theme') || 'cosmos-gold';
+    applyThemeToBootElements(currentThemeId);
+    return true;
+  }
+
+  if (!isBootFinished && !isRestMode) {
+    if (Date.now() - bootStartTime >= 120) {
+      if (typeof triggerBootAudioFn === 'function') triggerBootAudioFn();
+      if (!isSetupCompleted()) {
+        finishBootToSetup(bootScreen);
+      } else {
+        completeBoot(bootScreen);
+      }
+      return true;
+    }
+  }
+  return false;
+}
 
 export function getActiveBootTheme() {
   return currentThemeId;
@@ -193,16 +233,15 @@ export function initBootScreen() {
 
   if (!bootScreen) return;
 
+  bootStartTime = Date.now();
+
   // Apply saved theme right away
   applyThemeToBootElements(currentThemeId);
 
   // In Rest Mode / Preview, tap or click anywhere on screen to wake/exit
   const handleRestWake = () => {
     if (isPreviewing) {
-      isPreviewing = false;
-      completeBoot(bootScreen);
-      currentThemeId = localStorage.getItem('ps5_boot_theme') || 'cosmos-gold';
-      applyThemeToBootElements(currentThemeId);
+      skipBootScreen();
       return;
     }
     if (isRestMode && Date.now() - restModeEnterTime > 300) {
@@ -212,11 +251,6 @@ export function initBootScreen() {
 
   bootScreen.addEventListener('click', handleRestWake);
   bootScreen.addEventListener('pointerdown', handleRestWake);
-
-  // 1. Silent, non-blocking background Steam synchronization
-  syncPCGames(true).catch(err => {
-    console.warn('[PS5 Boot] Background sync completed with warning:', err);
-  });
 
   // 2. Play iconic PS5 Boot Chord immediately (or on first interaction if blocked by autoplay)
   let audioTriggered = false;
@@ -229,52 +263,109 @@ export function initBootScreen() {
     }
   };
 
+  triggerBootAudioFn = triggerAudio;
   triggerAudio();
 
-  // Ensure first click/key unlocks audio context immediately
+  const isFirstBoot = !isSetupCompleted();
+
+  // Ensure first click/key unlocks audio context immediately and allows prompt skipping
+  const cleanupUserUnlock = () => {
+    window.removeEventListener('pointerdown', handleUserUnlock);
+    window.removeEventListener('keydown', handleUserUnlock);
+  };
+
   const handleUserUnlock = () => {
     triggerAudio();
-    if (Date.now() - startTime >= 900 && !isBootFinished && !isRestMode && !isPreviewing) {
-      completeBoot(bootScreen);
+    if (skipBootScreen()) {
+      cleanupUserUnlock();
     }
   };
 
   window.addEventListener('pointerdown', handleUserUnlock, { passive: true });
   window.addEventListener('keydown', handleUserUnlock, { passive: true });
 
-  const startTime = Date.now();
-  const AUTO_DISSOLVE_MS = 2400; // Authentic ~2.4s cinematic PS5 boot duration
+  const AUTO_DISSOLVE_MS = isFirstBoot ? 2200 : 2200; // Always 2.2s for cinematic boot feel
+ 
+   // 3. Initialize Live Canvas Animation
+   if (canvas) {
+     runPS5BootCanvas(canvas);
+   }
 
-  // 3. Initialize Live Canvas Animation
-  if (canvas) {
-    runPS5BootCanvas(canvas);
-  }
+   // 4. Smooth automatic dissolve into either Setup Screen (First-Boot) or PS5 Dashboard
+   setTimeout(() => {
+     if (!isBootFinished && !isRestMode && !isPreviewing) {
+       if (!isSetupCompleted()) {
+         finishBootToSetup(bootScreen);
+       } else {
+         completeBoot(bootScreen);
+       }
+     }
+   }, AUTO_DISSOLVE_MS);
 
-  // 4. Smooth automatic dissolve into the PS5 Dashboard
+   // Render Theme Selector Grid in Modal
+   renderThemesGrid();
+ }
+
+ function finishBootToSetup(bootScreen) {
+   if (isBootFinished || !bootScreen || isRestMode) return;
+   isBootFinished = true;
+
+   bootScreen.classList.add('fade-out');
+
+   setTimeout(() => {
+     bootScreen.classList.add('hidden');
+     if (animationFrameId && !isRestMode && !isPreviewing) {
+       cancelAnimationFrame(animationFrameId);
+       animationFrameId = null;
+     }
+     showSetupScreen();
+   }, 560);
+ }
+
+ function completeBoot(bootScreen) {
+   if (isBootFinished || !bootScreen || isRestMode) return;
+   isBootFinished = true;
+
+   // Dissolve boot screen with smooth cinematic blur & scale fade
+   bootScreen.classList.add('fade-out');
+
+   setTimeout(() => {
+     bootScreen.classList.add('hidden');
+     if (animationFrameId && !isRestMode && !isPreviewing) {
+       cancelAnimationFrame(animationFrameId);
+       animationFrameId = null;
+     }
+     // Bug 3.4: Start ambient drone only after boot screen has completely dissolved
+     try {
+       ps5Audio.startAmbientDrone();
+     } catch (e) {}
+   }, 560);
+ }
+
+export function triggerFirstBootExperience() {
+  const bootScreen = document.getElementById('ps5-boot-screen');
+  const canvas = document.getElementById('ps5-boot-canvas');
+  if (!bootScreen || !canvas) return;
+
+  setSetupCompleted(false);
+  isBootFinished = false;
+  isRestMode = false;
+  isPreviewing = false;
+
+  bootScreen.classList.remove('hidden', 'fade-out', 'rest-mode');
+  applyThemeToBootElements(currentThemeId);
+
+  try {
+    ps5Audio.playBootChord(currentThemeId);
+  } catch (e) {}
+
+  runPS5BootCanvas(canvas, true);
+
   setTimeout(() => {
-    if (!isBootFinished && !isRestMode && !isPreviewing) {
-      completeBoot(bootScreen);
+    if (!isBootFinished && !isRestMode) {
+      finishBootToSetup(bootScreen);
     }
-  }, AUTO_DISSOLVE_MS);
-
-  // Render Theme Selector Grid in Modal
-  renderThemesGrid();
-}
-
-function completeBoot(bootScreen) {
-  if (isBootFinished || !bootScreen || isRestMode) return;
-  isBootFinished = true;
-
-  // Dissolve boot screen with smooth cinematic blur & scale fade
-  bootScreen.classList.add('fade-out');
-
-  setTimeout(() => {
-    bootScreen.classList.add('hidden');
-    if (animationFrameId && !isRestMode && !isPreviewing) {
-      cancelAnimationFrame(animationFrameId);
-      animationFrameId = null;
-    }
-  }, 850);
+  }, 2900);
 }
 
 /* ==========================================================================
@@ -288,8 +379,11 @@ export function enterRestMode() {
 
   // Cleanly close any open overlays, modal popups, or control center dock
   document.querySelectorAll('.ps5-modal-overlay.active').forEach(m => m.classList.remove('active'));
-  document.getElementById('ps5-control-center')?.classList.remove('active');
+  document.getElementById('ps5-control-center')?.classList.remove('active', 'open');
   document.getElementById('ps5-library-modal')?.classList.remove('active');
+  try {
+    closeControlCenter();
+  } catch (e) {}
 
   isRestMode = true;
   isBootFinished = false;
@@ -343,6 +437,13 @@ export function exitRestMode() {
 }
 
 export function isRestModeActive() {
+  if (typeof document !== 'undefined') {
+    const bootScreen = document.getElementById('ps5-boot-screen');
+    if (bootScreen && bootScreen.classList.contains('hidden')) {
+      isRestMode = false;
+      return false;
+    }
+  }
   return isRestMode;
 }
 
@@ -465,7 +566,11 @@ function runPS5BootCanvas(canvas, forceRestart = false) {
       return;
     }
 
-    animTime += 0.016;
+    const prefersReducedMotion = typeof window !== 'undefined' && 
+      window.matchMedia && 
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    animTime += prefersReducedMotion ? 0.003 : 0.016;
     const time = animTime;
     const ctx = canvasCtx;
     const width = canvasWidth;
@@ -531,8 +636,8 @@ function runPS5BootCanvas(canvas, forceRestart = false) {
 
     // 3. Stardust Glitter Particles & Floating Symbols
     particles.forEach(p => {
-      p.x += p.vx;
-      p.y += p.vy + Math.sin(time * 2 + p.pulsePhase) * 0.25;
+      p.x += prefersReducedMotion ? p.vx * 0.2 : p.vx;
+      p.y += (prefersReducedMotion ? 0 : p.vy) + Math.sin(time * 2 + p.pulsePhase) * (prefersReducedMotion ? 0.05 : 0.25);
 
       // Wrap around edges
       if (p.x > width + 10) p.x = -10;

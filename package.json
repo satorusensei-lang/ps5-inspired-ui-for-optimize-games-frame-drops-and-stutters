@@ -1,16 +1,20 @@
 {
   "name": "myraa",
   "version": "1.0.0",
-  "description": "",
+  "description": "MYRAA PlayStation 5 Desktop Experience & Multi-Store Game Launcher",
+  "author": "MYRAA",
   "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "verify:agent": "node scripts/verify-agent-grounding.mjs",
     "preview": "vite preview",
-    "desktop": "cross-env NODE_ENV=development concurrently \"npm run dev\" \"electron .\"",
+    "desktop": "cross-env NODE_ENV=development concurrently -k -s first \"npm run dev\" \"electron .\"",
     "desktop:app": "electron .",
-    "build:desktop": "vite build && electron ."
+    "build:desktop": "vite build && electron .",
+    "dist:win": "vite build && electron-builder --win nsis",
+    "release:github": "node scripts/publish-github.mjs"
   },
   "dependencies": {
     "motion": "^14.1.0"
@@ -19,6 +23,44 @@
     "concurrently": "^10.0.6",
     "cross-env": "^10.1.0",
     "electron": "^44.7.0",
+    "electron-builder": "^26.18.0",
     "vite": "^8.3.4"
+  },
+  "build": {
+    "appId": "com.myraa.ps5",
+    "productName": "PlayStation 5",
+    "directories": {
+      "output": "release"
+    },
+    "asar": true,
+    "files": [
+      "dist/**/*",
+      "!dist/assets/cache/**",
+      "!dist/test_embed.html",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "electron/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "PlayStation 5",
+      "installerIcon": "electron/icon.ico",
+      "uninstallerIcon": "electron/icon.ico",
+      "artifactName": "MYRAA-PS5-Setup-${version}.${ext}"
+    }
   }
 }

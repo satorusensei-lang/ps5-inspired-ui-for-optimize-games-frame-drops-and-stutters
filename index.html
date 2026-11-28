@@ -10,10 +10,45 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Space+Grotesk:wght@400..700&display=swap" rel="stylesheet" />
 
+  <!-- Favicon & Application Icons -->
+  <link rel="icon" type="image/x-icon" href="./favicon.ico" />
+  <link rel="icon" type="image/png" href="./icon.png" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./icon.png" />
+
   <!-- PS5 Master Stylesheets -->
   <link rel="stylesheet" href="./src/styles/ps5-variables.css" />
   <link rel="stylesheet" href="./src/styles/ps5-components.css" />
   <link rel="stylesheet" href="./src/styles/ps5-main.css" />
+
+  <!-- Inline: Pre-mark setup completed so boot always goes straight to dashboard & Failsafe Watchdog -->
+  <script>
+    // If user has never run setup, pre-mark it so boot skips the setup screen.
+    // The user can still access profile settings from within the dashboard.
+    if (!localStorage.getItem('ps5_setup_completed')) {
+      localStorage.setItem('ps5_setup_completed', 'true');
+      if (!localStorage.getItem('ps5_account_name')) {
+        localStorage.setItem('ps5_account_name', 'PlayStation Player');
+      }
+    }
+
+    // Failsafe Watchdog: force dissolve boot screen after 3.8s if not already dissolved
+    window.addEventListener('DOMContentLoaded', function() {
+      setTimeout(function() {
+        try {
+          var boot = document.getElementById('ps5-boot-screen');
+          if (boot && !boot.classList.contains('hidden') && !boot.classList.contains('fade-out')) {
+            console.warn('[PS5 Boot Watchdog] Failsafe: force dissolving boot screen to dashboard');
+            boot.classList.add('fade-out');
+            setTimeout(function() {
+              boot.classList.add('hidden');
+              boot.style.display = 'none';
+            }, 600);
+          }
+        } catch (e) {}
+      }, 3800);
+    });
+  </script>
 </head>
 <body>
   <!-- ====================================================================
@@ -26,6 +61,64 @@
         <svg class="ps5-boot-svg-logo" viewBox="0 0 24 24" width="112" height="90" fill="#ffffff">
           <path d="M15.858 11.451c-.313.395-1.079.676-1.079.676l-5.696 2.046v-1.509l4.192-1.493c.476-.17.549-.412.162-.538c-.386-.127-1.085-.09-1.56.08l-2.794.984v-1.566l.161-.054s.807-.286 1.942-.412c1.135-.125 2.525.017 3.616.43c1.23.39 1.368.962 1.056 1.356M9.625 8.883v-3.86c0-.453-.083-.87-.508-.988c-.326-.105-.528.198-.528.65v9.664l-2.606-.827V2c1.108.206 2.722.692 3.59.985c2.207.757 2.955 1.7 2.955 3.825c0 2.071-1.278 2.856-2.903 2.072Zm-8.424 3.625C-.061 12.15-.271 11.41.304 10.984c.532-.394 1.436-.69 1.436-.69l3.737-1.33v1.515l-2.69.963c-.474.17-.547.411-.161.538c.386.126 1.085.09 1.56-.08l1.29-.469v1.356l-.257.043a8.45 8.45 0 0 1-4.018-.323Z"/>
         </svg>
+      </div>
+      <div class="ps5-boot-subtext" id="ps5-boot-subtext">Play Has No Limits™</div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       PlayStation 5 Out-of-Box First-Time Console Setup (OOBE)
+       ==================================================================== -->
+  <div id="ps5-setup-screen" class="ps5-setup-screen" style="display: none;">
+    <div class="ps5-setup-backdrop"></div>
+    <div class="ps5-setup-card">
+      <div class="ps5-setup-top-glow"></div>
+      
+      <div class="ps5-setup-brand">
+        <div class="ps5-setup-ps-logo">
+          <svg viewBox="0 0 24 24" width="46" height="38" fill="#ffffff">
+            <path d="M15.858 11.451c-.313.395-1.079.676-1.079.676l-5.696 2.046v-1.509l4.192-1.493c.476-.17.549-.412.162-.538c-.386-.127-1.085-.09-1.56.08l-2.794.984v-1.566l.161-.054s.807-.286 1.942-.412c1.135-.125 2.525.017 3.616.43c1.23.39 1.368.962 1.056 1.356M9.625 8.883v-3.86c0-.453-.083-.87-.508-.988c-.326-.105-.528.198-.528.65v9.664l-2.606-.827V2c1.108.206 2.722.692 3.59.985c2.207.757 2.955 1.7 2.955 3.825c0 2.071-1.278 2.856-2.903 2.072Zm-8.424 3.625C-.061 12.15-.271 11.41.304 10.984c.532-.394 1.436-.69 1.436-.69l3.737-1.33v1.515l-2.69.963c-.474.17-.547.411-.161.538c.386.126 1.085.09 1.56-.08l1.29-.469v1.356l-.257.043a8.45 8.45 0 0 1-4.018-.323Z"/>
+          </svg>
+        </div>
+        <h1 class="ps5-setup-title">Welcome to PlayStation®5</h1>
+        <p class="ps5-setup-subtitle">Set up your console player profile to begin</p>
+      </div>
+
+      <!-- Avatar Picker Row -->
+      <div class="ps5-setup-group">
+        <label class="ps5-setup-label">Choose your Profile Avatar</label>
+        <div class="ps5-setup-avatar-row" id="ps5-setup-avatar-row">
+          <!-- Dynamically populated with PlayStation character avatars -->
+        </div>
+      </div>
+
+      <!-- Online ID / Player Name Input -->
+      <div class="ps5-setup-group">
+        <label for="ps5-setup-input-name" class="ps5-setup-label">PlayStation Online ID / Player Name</label>
+        <div class="ps5-setup-input-box">
+          <input type="text" id="ps5-setup-input-name" class="ps5-setup-input" maxlength="24" placeholder="Enter your player name..." autocomplete="off" spellcheck="false" />
+          <span class="ps5-setup-hint-badge">Press Enter ↵</span>
+        </div>
+      </div>
+
+      <!-- Auto System Specs / Store Sync Status -->
+      <div class="ps5-setup-features-row">
+        <div class="ps5-setup-feature-pill">
+          <span class="feat-dot"></span>
+          <span>Automatic PC Game Scanner (Steam, Xbox, Epic Games)</span>
+        </div>
+        <div class="ps5-setup-feature-pill">
+          <span class="feat-dot"></span>
+          <span>Tempest 3D Audio & 120 FPS Performance</span>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div class="ps5-setup-actions">
+        <button id="btn-submit-ps5-setup" class="ps5-setup-submit-btn">
+          <span>Enter PlayStation 5</span>
+          <span class="ps5-glyph glyph-cross">✕</span>
+        </button>
       </div>
     </div>
   </div>
@@ -74,7 +167,7 @@
         </button>
 
         <!-- Audio Ambient Music Toggle (Mute/Unmute) -->
-        <button id="btn-header-audio" class="ps5-icon-btn" title="Toggle Dashboard Music & Soundscape">
+        <button id="btn-header-audio" class="ps5-icon-btn" title="Toggle Dashboard Music & Soundscape" style="display: none !important;">
           <svg id="header-audio-icon-on" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
@@ -87,25 +180,20 @@
         </button>
 
         <!-- Controller Status Badge -->
-        <div id="controller-status-badge" class="controller-status-badge" title="Connect a USB / Bluetooth Gamepad (DualSense, Xbox, or PC)">
+        <div id="controller-status-badge" class="controller-status-badge" title="Connect a USB / Bluetooth Gamepad (DualSense, Xbox, or PC)" style="display: none !important;">
           <span id="controller-status-dot" class="controller-status-dot"></span>
           <span id="controller-status-label">No Controller</span>
         </div>
 
-        <!-- User Profile Avatar & Level Progress Ring -->
-        <div id="btn-header-profile" class="ps5-profile-btn" title="View Profile & Trophies">
+        <!-- User Profile Avatar (Authentic PS5 Circular Badge with 'P') -->
+        <div id="btn-header-profile" class="ps5-profile-btn" title="View Profile (P)">
           <div class="ps5-avatar-wrap">
-            <img class="ps5-avatar-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" alt="Profile Avatar" />
-            <span class="ps5-avatar-status" title="Online"></span>
+            <div class="ps5-avatar-disc" id="ps5-header-avatar-disc" style="background: linear-gradient(135deg, #3b82f6, #7c3aed);">
+              <span class="ps5-avatar-initial" id="ps5-header-avatar-initial">P</span>
+            </div>
           </div>
-          <span class="ps5-profile-name" id="ps5-header-profile-name">PlayStation Master</span>
-          <div class="ps5-trophy-ring-badge" title="Level 420 • 74% to Level 421">
-            <svg class="ps5-trophy-ring-svg" viewBox="0 0 36 36">
-              <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="3.5" />
-              <path class="ring-progress" stroke-dasharray="74, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--ps-platinum)" stroke-width="3.5" stroke-linecap="round" />
-            </svg>
-            <span class="ps5-trophy-level-num">420</span>
-          </div>
+          <span class="ps5-profile-name" id="ps5-header-profile-name" style="display: none !important;">PlayStation Master</span>
+          <div class="ps5-trophy-ring-badge" style="display: none !important;"></div>
         </div>
 
         <!-- Live Digital Clock -->
@@ -115,6 +203,9 @@
         <div id="ps5-desktop-controls" class="ps5-desktop-controls" style="display: none;">
           <button id="win-btn-minimize" class="win-btn" title="Minimize Window">
             <svg viewBox="0 0 12 12" width="11" height="11"><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.8"/></svg>
+          </button>
+          <button id="win-btn-maximize" class="win-btn" title="Maximize / Fullscreen Window">
+            <svg viewBox="0 0 12 12" width="11" height="11"><rect x="1.5" y="1.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
           </button>
           <button id="win-btn-close" class="win-btn win-btn-close" title="Exit PlayStation 5">
             <svg viewBox="0 0 12 12" width="11" height="11"><line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" stroke-width="1.8"/><line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width="1.8"/></svg>
@@ -130,35 +221,98 @@
       <!-- Populated dynamically by carousel.js: PS Store + Installed Games + Game Library -->
     </section>
 
+    <!-- Active Game Title Banner (Authentic PS5 Placement Directly Beside Track) -->
+    <div id="ps5-active-title-banner" class="ps5-active-title-banner">
+      <span id="ps5-active-source-badge" class="ps5-active-source-badge">STEAM</span>
+      <span id="ps5-active-game-name" class="ps5-active-game-name">Black Myth: Wukong</span>
+    </div>
+
     <!-- ====================================================================
          Hero Details & Interactive Game Hub
          ==================================================================== -->
     <section class="ps5-hero-details">
       <div class="ps5-game-header">
         <div id="ps5-hero-studio" class="ps5-studio-badge" style="display: none;"></div>
-        <img id="ps5-hero-logo" class="ps5-hero-logo" alt="Game Logo" style="display: none;" />
-        <h1 id="ps5-hero-title" class="ps5-game-title">
-          Marvel's Spider-Man 2
-        </h1>
+        <div id="ps5-hero-title-badge-row" class="ps5-hero-title-badge-row" style="display: none !important;">
+          <span class="ps5-badge-platform">PS5</span>
+          <span id="ps5-hero-subtitle-name" class="ps5-hero-subtitle-name">Black Myth: Wukong</span>
+          <span class="ps5-badge-plus" title="PlayStation Plus">+</span>
+          <span id="ps5-hero-dl-icon-indicator" class="ps5-badge-dl-cloud" style="display: none;" title="Downloading via Steam">
+            <svg class="ps5-dl-cloud-svg animating" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+            </svg>
+          </span>
+        </div>
+        <div class="ps5-hero-brand-slot">
+          <img id="ps5-hero-logo" class="ps5-hero-logo" alt="Game Logo" style="display: none;" />
+          <h1 id="ps5-hero-title" class="ps5-game-title">
+            Black Myth: Wukong
+          </h1>
+        </div>
+        <div id="ps5-hero-subtitle" class="ps5-hero-subtitle">Confront Destiny</div>
         <div id="ps5-hero-meta" class="ps5-game-meta">
           <!-- Populated dynamically -->
         </div>
 
         <div class="ps5-play-actions">
           <button id="ps5-play-btn" class="ps5-play-btn" title="Launch Game (Press Enter / ✕)">
-            <svg id="ps5-play-btn-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-              <polygon points="5 3 19 12 5 21 5 3"/>
-            </svg>
-            <span>Play Game</span>
+            <span class="ps5-play-btn-content" id="ps5-play-btn-content">
+              <span class="ps5-play-btn-text" id="ps5-play-btn-text">Play Game</span>
+            </span>
           </button>
 
           <button id="ps5-options-btn" class="ps5-options-btn" title="Options (☰ / □)">
             <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-              <circle cx="12" cy="5" r="1.8"/>
-              <circle cx="12" cy="12" r="1.8"/>
-              <circle cx="12" cy="19" r="1.8"/>
+              <circle cx="5" cy="12" r="2.2"/>
+              <circle cx="12" cy="12" r="2.2"/>
+              <circle cx="19" cy="12" r="2.2"/>
             </svg>
           </button>
+        </div>
+
+        <!-- Authentic PS5 Bottom Widgets: Trophies & Friends Who Play -->
+        <div id="ps5-hero-bottom-widgets" class="ps5-hero-bottom-widgets">
+          <!-- Trophies Widget -->
+          <div id="ps5-widget-trophies" class="ps5-widget-card ps5-widget-trophies" title="View Trophies">
+            <div class="ps5-trophies-row" id="ps5-trophies-row">
+              <div class="ps5-trophy-item">
+                <span class="ps5-trophy-icon platinum">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M19 4h-2V2H7v2H5c-1.1 0-2 .9-2 2v2c0 2.5 1.9 4.6 4.3 4.9C8.3 14.5 10 16 12 16.3v2.7H9v2h6v-2h-3v-2.7c2-.3 3.7-1.8 4.7-3.4 2.4-.3 4.3-2.4 4.3-4.9V6c0-1.1-.9-2-2-2zm-14 4V6h2v4.6C5.8 10.3 5 9.2 5 8zm14 0c0 1.2-.8 2.3-2 2.6V6h2v2z"/></svg>
+                </span>
+                <span class="ps5-trophy-count" id="trophy-count-plat">0</span>
+              </div>
+              <div class="ps5-trophy-item">
+                <span class="ps5-trophy-icon gold">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M19 4h-2V2H7v2H5c-1.1 0-2 .9-2 2v2c0 2.5 1.9 4.6 4.3 4.9C8.3 14.5 10 16 12 16.3v2.7H9v2h6v-2h-3v-2.7c2-.3 3.7-1.8 4.7-3.4 2.4-.3 4.3-2.4 4.3-4.9V6c0-1.1-.9-2-2-2zm-14 4V6h2v4.6C5.8 10.3 5 9.2 5 8zm14 0c0 1.2-.8 2.3-2 2.6V6h2v2z"/></svg>
+                </span>
+                <span class="ps5-trophy-count" id="trophy-count-gold">0</span>
+              </div>
+              <div class="ps5-trophy-item">
+                <span class="ps5-trophy-icon silver">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M19 4h-2V2H7v2H5c-1.1 0-2 .9-2 2v2c0 2.5 1.9 4.6 4.3 4.9C8.3 14.5 10 16 12 16.3v2.7H9v2h6v-2h-3v-2.7c2-.3 3.7-1.8 4.7-3.4 2.4-.3 4.3-2.4 4.3-4.9V6c0-1.1-.9-2-2-2zm-14 4V6h2v4.6C5.8 10.3 5 9.2 5 8zm14 0c0 1.2-.8 2.3-2 2.6V6h2v2z"/></svg>
+                </span>
+                <span class="ps5-trophy-count" id="trophy-count-silver">1</span>
+              </div>
+              <div class="ps5-trophy-item">
+                <span class="ps5-trophy-icon bronze">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M19 4h-2V2H7v2H5c-1.1 0-2 .9-2 2v2c0 2.5 1.9 4.6 4.3 4.9C8.3 14.5 10 16 12 16.3v2.7H9v2h6v-2h-3v-2.7c2-.3 3.7-1.8 4.7-3.4 2.4-.3 4.3-2.4 4.3-4.9V6c0-1.1-.9-2-2-2zm-14 4V6h2v4.6C5.8 10.3 5 9.2 5 8zm14 0c0 1.2-.8 2.3-2 2.6V6h2v2z"/></svg>
+                </span>
+                <span class="ps5-trophy-count" id="trophy-count-bronze">11</span>
+              </div>
+            </div>
+            <div class="ps5-widget-label">Trophies</div>
+          </div>
+
+          <!-- Friends Who Play Widget -->
+          <div id="ps5-widget-friends" class="ps5-widget-card ps5-widget-friends" title="Friends Who Play">
+            <div class="ps5-friends-avatars-row" id="ps5-friends-avatars-row">
+              <span class="ps5-friend-avatar-disc" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">A</span>
+              <span class="ps5-friend-avatar-disc" style="background: linear-gradient(135deg, #10b981, #047857);">C</span>
+              <span class="ps5-friend-avatar-disc" style="background: linear-gradient(135deg, #f59e0b, #b45309);">D</span>
+              <span class="ps5-friend-avatar-disc" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">E</span>
+            </div>
+            <div class="ps5-widget-label">Friends Who Play</div>
+          </div>
         </div>
       </div>
 
@@ -168,10 +322,44 @@
       </div>
     </section>
 
+    <!-- Bottom Right Promotional / Store Card -->
+    <div id="ps5-widget-promo-card" class="ps5-widget-promo-card" title="Special Offer / Store Details">
+      <div class="ps5-promo-art-wrap">
+        <img id="ps5-promo-img" class="ps5-promo-img" src="/assets/games/wukong/steam_library_hero.jpg" alt="Promotional Artwork" />
+        <div class="ps5-promo-art-overlay"></div>
+      </div>
+      <div class="ps5-promo-info">
+        <div id="ps5-promo-title" class="ps5-promo-title">BLACK MYTH WUKONG</div>
+        <div class="ps5-promo-pricing">
+          <span id="ps5-promo-discount" class="ps5-promo-discount">-20%</span>
+          <span id="ps5-promo-price" class="ps5-promo-price">$47.99</span>
+          <span id="ps5-promo-orig-price" class="ps5-promo-orig-price">$59.99</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Right Game Badges (Authentic PS5 Source & Playtime) -->
+    <div id="ps5-bottom-right-stats" class="ps5-bottom-right-stats">
+      <div id="ps5-stat-source-pill" class="ps5-stat-pill">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+          <circle cx="7" cy="7" r="1.5"/>
+        </svg>
+        <span id="ps5-stat-source-text">STEAM</span>
+      </div>
+      <div id="ps5-stat-playtime-pill" class="ps5-stat-pill">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+        <span id="ps5-stat-playtime-text">91h</span>
+      </div>
+    </div>
+
     <!-- ====================================================================
          Footer Bar with DualSense Hints & PS Button Trigger
          ==================================================================== -->
-    <footer class="ps5-footer-bar">
+    <footer class="ps5-footer-bar" style="display: none !important;">
       <!-- Quick Menu Trigger Button -->
       <button id="ps5-btn-trigger" class="ps-button-trigger" title="Open PS Control Center (Press P)">
         <svg class="ps-btn-icon-glyph" viewBox="0 0 32 32">
@@ -304,6 +492,17 @@
           <span class="cc-dock-label">Home</span>
         </button>
 
+        <!-- Game Library -->
+        <button id="cc-dock-library" class="cc-dock-icon" title="Game Library">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          <span class="cc-dock-label">Library</span>
+        </button>
+
         <!-- Switcher -->
         <button id="cc-dock-switcher" class="cc-dock-icon" title="Switcher (Fast Switch Suspended Games)">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
@@ -323,6 +522,16 @@
           <span class="cc-dock-label">Notifications</span>
         </button>
 
+        <!-- Downloads / Uploads -->
+        <button id="cc-dock-downloads" class="cc-dock-icon" title="Downloads & Uploads">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span class="cc-dock-label">Downloads</span>
+        </button>
+
         <!-- Game Base -->
         <button id="cc-dock-gamebase" class="cc-dock-icon" title="Game Base & Friends">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
@@ -331,7 +540,7 @@
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
-          <span class="cc-dock-label">Game Base</span>
+          <span class="cc-dock-label">Friends</span>
         </button>
 
         <!-- Music -->
@@ -366,6 +575,15 @@
             <line x1="13" y1="10" x2="13" y2="14" stroke="#10b981" stroke-width="2.5"/>
           </svg>
           <span class="cc-dock-label">Accessories</span>
+        </button>
+
+        <!-- Profile -->
+        <button id="cc-dock-profile" class="cc-dock-icon" title="User Profile">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span class="cc-dock-label">Profile</span>
         </button>
 
         <!-- Quick Boot Theme Switcher -->
@@ -407,6 +625,7 @@
         </div>
 
         <div class="game-hud-center">
+          <img id="game-hud-logo" class="game-hud-logo" alt="Game Logo" style="display: none;" />
           <h2 id="game-hud-title" class="game-hud-title">Marvel's Spider-Man 2</h2>
           <p id="game-hud-status" class="game-hud-status">Ready to Resume • Fast Travel Available</p>
 
@@ -421,7 +640,7 @@
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; color: var(--ps-white-60); font-size: 0.88rem;">
-          <div>DualSense Wireless Controller Connected (Adaptive Triggers Active)</div>
+          <div>DualSense Wireless Controller Connected (Analog Controls & Vibration Active)</div>
           <div>Press <strong>ESC</strong> or <strong>○ Circle</strong> to exit</div>
         </div>
       </div>
@@ -486,182 +705,437 @@
          Native PS5 Modals & Overlays (Replacing all browser alert dialogs)
          ==================================================================== -->
 
-    <!-- 1. System Settings Modal -->
-    <div id="ps5-settings-modal" class="ps5-modal-overlay">
-      <div class="ps5-modal-box">
-        <div class="ps5-modal-header">
-          <h2>Settings</h2>
-          <button class="modal-close-btn" data-close-overlay title="Close (○ Circle)">✕</button>
+    <!-- 1. System Settings (Authentic PlayStation 5 Settings Screen Matching Official OS) -->
+    <div id="ps5-settings-modal" class="ps5-modal-overlay ps5-settings-overlay">
+      <div class="ps5-settings-screen-authentic">
+        <!-- Top Left Settings Heading -->
+        <div class="ps5-settings-header-authentic">
+          <h1 class="ps5-settings-title-authentic">Settings</h1>
         </div>
-        <div class="ps5-settings-list">
-          <div class="settings-item clickable" id="setting-account-name-btn" style="cursor: pointer; border-color: rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.1);">
-            <div class="settings-icon">👤</div>
-            <div class="settings-text">
-              <h3>Users and Accounts</h3>
-              <p>Change your PlayStation Online ID, Player Display Name & Account Info</p>
+
+        <!-- Scrollable Settings List Container -->
+        <div class="ps5-settings-scroll-authentic">
+          <div class="ps5-settings-list-authentic" role="list">
+            <!-- 1. Network -->
+            <div class="settings-row-authentic clickable" id="setting-network-btn" tabindex="0" role="button" aria-label="Network">
+              <div class="settings-row-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+              </div>
+              <span class="settings-row-title">Network</span>
             </div>
-            <span class="settings-tag" id="current-account-name-tag" style="color: #a5b4fc; border-color: #a5b4fc;">PlayStation Master</span>
-          </div>
-          <div class="settings-item">
-            <div class="settings-icon">🖥️</div>
-            <div class="settings-text">
-              <h3>Screen and Video</h3>
-              <p>Resolution: 2160p (4K UHD) • VRR: Automatic • 120Hz Output: Enabled • HDR: On</p>
+
+            <!-- 2. Notifications -->
+            <div class="settings-row-authentic clickable" id="setting-notifications-btn" tabindex="0" role="button" aria-label="Notifications">
+              <div class="settings-row-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+              </div>
+              <span class="settings-row-title">Notifications</span>
             </div>
-            <span class="settings-tag">4K 120Hz</span>
-          </div>
-          <div class="settings-item">
-            <div class="settings-icon">🎧</div>
-            <div class="settings-text">
-              <h3>Sound & 3D Audio</h3>
-              <p>Tempest 3D AudioTech enabled for Stereo Headphones & TV Speakers</p>
+
+            <!-- 3. Sound -->
+            <div class="settings-row-authentic clickable" id="setting-sound-audio-btn" tabindex="0" role="button" aria-label="Sound">
+              <div class="settings-row-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                </svg>
+              </div>
+              <span class="settings-row-title">Sound</span>
             </div>
-            <span class="settings-tag">3D Active</span>
-          </div>
-          <div class="settings-item">
-            <div class="settings-icon">💾</div>
-            <div class="settings-text">
-              <h3>Storage</h3>
-              <p>Console Storage: 825 GB (450 GB Free) • M.2 NVMe SSD: 1.8 TB (1.2 TB Free)</p>
+
+            <!-- 4. Screen and Video -->
+            <div class="settings-row-authentic clickable" id="setting-screen-video-btn" tabindex="0" role="button" aria-label="Screen and Video">
+              <div class="settings-row-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="4" width="20" height="13" rx="2"/>
+                  <line x1="8" y1="21" x2="16" y2="21"/>
+                  <line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+              </div>
+              <span class="settings-row-title">Screen and Video</span>
             </div>
-            <span class="settings-tag">1.6 TB Free</span>
-          </div>
-          <div class="settings-item clickable" id="setting-boot-themes-btn" style="cursor: pointer; border-color: rgba(59, 130, 246, 0.4); background: rgba(59, 130, 246, 0.1);">
-            <div class="settings-icon">✨</div>
-            <div class="settings-text">
-              <h3>Startup Boot Animations</h3>
-              <p>Preview and choose from 5 official PS5 opening animation editions</p>
+
+            <!-- 5. Accessories -->
+            <div class="settings-row-authentic clickable" id="setting-accessories-btn" tabindex="0" role="button" aria-label="Accessories">
+              <div class="settings-row-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="6" width="20" height="12" rx="3"/>
+                  <line x1="6" y1="12" x2="10" y2="12"/>
+                  <line x1="8" y1="10" x2="8" y2="14"/>
+                  <circle cx="15" cy="11" r="1"/>
+                  <circle cx="17" cy="13" r="1"/>
+                </svg>
+              </div>
+              <span class="settings-row-title">Accessories</span>
             </div>
-            <span class="settings-tag" id="current-boot-theme-tag" style="color: #60a5fa; border-color: #60a5fa;">Cosmos Gold</span>
-          </div>
-          <div class="settings-item">
-            <div class="settings-icon">🎮</div>
-            <div class="settings-text">
-              <h3>Accessories & Controller</h3>
-              <p>DualSense Vibration: Strong (Standard) • Trigger Effect: Strong • Communication: USB/Bluetooth</p>
+
+            <!-- 6. Storage -->
+            <div class="settings-row-authentic clickable" id="setting-storage-btn" tabindex="0" role="button" aria-label="Storage">
+              <div class="settings-row-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                  <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                </svg>
+              </div>
+              <span class="settings-row-title">Storage</span>
             </div>
-            <span class="settings-tag">DualSense</span>
+
+            <!-- 7. System -->
+            <div class="settings-row-authentic clickable" id="setting-system-btn" tabindex="0" role="button" aria-label="System">
+              <div class="settings-row-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                  <line x1="12" y1="22.08" x2="12" y2="12"/>
+                </svg>
+              </div>
+              <span class="settings-row-title">System</span>
+            </div>
+
+            <!-- 8. Users and Accounts -->
+            <div class="settings-row-authentic clickable" id="setting-account-name-btn" tabindex="0" role="button" aria-label="Users and Accounts">
+              <div class="settings-row-icon">
+                <img class="ps5-avatar-img settings-row-avatar-img" src="/assets/games/got/tile.webp" alt="User Avatar" onerror="this.style.display='none'; if (this.nextElementSibling) this.nextElementSibling.style.display='block';">
+                <svg style="display:none;" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <circle cx="12" cy="9" r="3"/>
+                  <path d="M6.5 18a6 6 0 0 1 11 0"/>
+                </svg>
+              </div>
+              <span class="settings-row-title">Users and Accounts</span>
+              <span id="current-account-name-tag" style="display: none;">PlayStation Master</span>
+            </div>
+
+            <!-- 9. Family and Parental Controls -->
+            <div class="settings-row-authentic clickable" id="setting-family-controls-btn" tabindex="0" role="button" aria-label="Family and Parental Controls">
+              <div class="settings-row-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
+              <span class="settings-row-title">Family and Parental Controls</span>
+            </div>
+
+            <!-- 10. Saved Data and Game/App Settings -->
+            <div class="settings-row-authentic clickable" id="setting-saved-data-btn" tabindex="0" role="button" aria-label="Saved Data and Game/App Settings">
+              <div class="settings-row-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                  <polyline points="7 3 7 8 15 8"/>
+                </svg>
+              </div>
+              <span class="settings-row-title">Saved Data and Game/App Settings</span>
+            </div>
+
+            <!-- 11. Accessibility -->
+            <div class="settings-row-authentic clickable" id="setting-accessibility-btn" tabindex="0" role="button" aria-label="Accessibility">
+              <div class="settings-row-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <circle cx="12" cy="7" r="1.5"/>
+                  <path d="M6 10h12"/>
+                  <path d="M12 10v6l-2 4"/>
+                  <path d="M12 16l2 4"/>
+                </svg>
+              </div>
+              <span class="settings-row-title">Accessibility</span>
+            </div>
+
+            <!-- 12. Captures and Broadcasts -->
+            <div class="settings-row-authentic clickable" id="setting-captures-btn" tabindex="0" role="button" aria-label="Captures and Broadcasts">
+              <div class="settings-row-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 7l-7 5 7 5V7z"/>
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+              </div>
+              <span class="settings-row-title">Captures and Broadcasts</span>
+            </div>
+
+            <!-- 13. Privacy -->
+            <div class="settings-row-authentic clickable" id="setting-privacy-btn" tabindex="0" role="button" aria-label="Privacy">
+              <div class="settings-row-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              </div>
+              <span class="settings-row-title">Privacy</span>
+            </div>
+
+            <!-- 13. Startup Boot Animations & Editions -->
+            <div class="settings-row-authentic clickable" id="setting-boot-themes-btn" tabindex="0" role="button" aria-label="Startup Boot Animations">
+              <div class="settings-row-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                </svg>
+              </div>
+              <span class="settings-row-title">Startup Boot Animations</span>
+              <span id="current-boot-theme-tag" style="display: none;">Cosmos Gold</span>
+            </div>
+
+            <!-- 14. First-Time Setup / Reset for Friend -->
+            <div class="settings-row-authentic clickable" id="setting-first-boot-btn" tabindex="0" role="button" aria-label="First-Time Setup">
+              <div class="settings-row-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+                  <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+                </svg>
+              </div>
+              <span class="settings-row-title">First-Time Setup / Reset for Friend</span>
+            </div>
+
+            <!-- 15. User's Guide, Health and Safety, and Other Information -->
+            <div class="settings-row-authentic clickable" id="setting-users-guide-btn" tabindex="0" role="button" aria-label="User's Guide, Health and Safety, and Other Information">
+              <div class="settings-row-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                  <circle cx="12" cy="8" r="2"/>
+                  <path d="M9 13a3 3 0 0 1 6 0"/>
+                </svg>
+              </div>
+              <span class="settings-row-title">User's Guide, Health and Safety, and Other Information</span>
+            </div>
+
+            <!-- Right Scroll Track Line (Authentic PS5 Indicator) -->
+            <div class="ps5-settings-scroll-track" aria-hidden="true"></div>
           </div>
         </div>
+
+        <!-- Sticky Footer Controller HUD -->
+        <footer class="ps5-settings-hud-authentic">
+          <div class="ps5-hud-prompt"><span class="ps5-glyph glyph-cross">✕</span> <span>Enter</span></div>
+          <div class="ps5-hud-prompt" data-close-overlay style="cursor: pointer;"><span class="ps5-glyph glyph-circle">○</span> <span>Back</span></div>
+        </footer>
       </div>
     </div>
 
     <!-- 2. Profile Card Modal -->
     <div id="ps5-profile-modal" class="ps5-modal-overlay">
       <div class="ps5-modal-box profile-box">
-        <div class="ps5-modal-header">
-          <h2>PlayStation Profile</h2>
-          <button class="modal-close-btn" data-close-overlay title="Close (○ Circle)">✕</button>
-        </div>
-        <div class="profile-hero-content">
-          <div class="profile-avatar-large">
-            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="Avatar" />
-            <span class="profile-online-badge">Online</span>
-          </div>
-          <div class="profile-details-text">
-            <div id="profile-name-display-row" class="profile-name-display-row">
-              <h3 id="ps5-modal-profile-name">PlayStation Master</h3>
-              <button id="btn-edit-profile-name" class="profile-edit-name-btn" title="Edit Online ID / Player Name">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-                <span>Edit Online ID</span>
-              </button>
-            </div>
-
-            <form id="profile-name-edit-form" class="profile-name-edit-form" style="display: none;">
-              <input type="text" id="profile-name-input" class="profile-name-input" maxlength="24" placeholder="Enter Online ID..." autocomplete="off" spellcheck="false" />
-              <button type="submit" class="profile-name-save-btn">Save</button>
-              <button type="button" id="btn-cancel-profile-name" class="profile-name-cancel-btn">Cancel</button>
-            </form>
-
-            <div class="profile-badges-row">
-              <span class="ps-plus-badge">PlayStation®Plus Premium</span>
-              <span class="ps-level-badge">Level 420 ★</span>
+        <div class="ps5-modal-header profile-modal-header">
+          <div class="profile-header-title-wrap">
+            <svg class="ps-header-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+            </svg>
+            <div>
+              <h2 class="profile-modal-title">PlayStation Profile</h2>
+              <div class="profile-modal-subtitle">PlayStation™Network Account & Trophy Records</div>
             </div>
           </div>
-        </div>
-        <!-- Level Progress Bar -->
-        <div class="profile-level-progress-card">
-          <div class="level-progress-info">
-            <span class="level-title">Trophy Level 420</span>
-            <span class="level-sub">74% to Level 421 (1,480 / 2,000 XP)</span>
-          </div>
-          <div class="level-bar-wrap">
-            <div class="level-bar-fill" style="width: 74%;"></div>
-          </div>
+          <button class="modal-close-btn" data-close-overlay title="Close (○ Circle / Esc)">✕</button>
         </div>
 
-        <div class="trophy-stats-grid">
-          <div class="trophy-stat-card">
-            <span class="trophy-icon">🏆</span>
-            <span class="trophy-count">4</span>
-            <span class="trophy-label">Platinum</span>
-          </div>
-          <div class="trophy-stat-card">
-            <span class="trophy-icon">🥇</span>
-            <span class="trophy-count">32</span>
-            <span class="trophy-label">Gold</span>
-          </div>
-          <div class="trophy-stat-card">
-            <span class="trophy-icon">🥈</span>
-            <span class="trophy-count">86</span>
-            <span class="trophy-label">Silver</span>
-          </div>
-          <div class="trophy-stat-card">
-            <span class="trophy-icon">🥉</span>
-            <span class="trophy-count">194</span>
-            <span class="trophy-label">Bronze</span>
-          </div>
-        </div>
+        <div class="profile-scroll-body">
+          <!-- Hero Identity Banner Card -->
+          <div class="profile-hero-banner">
+            <div class="profile-hero-left">
+              <div class="profile-avatar-large">
+                <img src="/assets/games/got/tile.webp" alt="Avatar" />
+                <span class="profile-online-badge">
+                  <span class="online-dot"></span> Online
+                </span>
+              </div>
+            </div>
 
-        <!-- Trophy Showcase Flyout Section -->
-        <div class="trophy-showcase-section">
-          <h3 class="trophy-showcase-title">🏆 Recent Platinum & Gold Trophies</h3>
-          <div class="trophy-showcase-list">
-            <div class="trophy-showcase-item">
-              <span class="trophy-badge-icon">🏆</span>
-              <div class="trophy-showcase-info">
-                <h4>Dedicated</h4>
-                <p>Marvel's Spider-Man 2 • Collect all Trophies</p>
+            <div class="profile-hero-right">
+              <div id="profile-name-display-row" class="profile-name-display-row">
+                <h3 id="ps5-modal-profile-name">PlayStation Master</h3>
+                <div class="profile-identity-actions">
+                  <button id="btn-edit-profile-name" class="profile-action-pill-btn" title="Edit Online ID / Player Name">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    <span>Edit Online ID</span>
+                  </button>
+
+                  <button id="btn-toggle-avatar-picker" class="profile-action-pill-btn" title="Choose from Official Avatars">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                      <line x1="9" y1="9" x2="9.01" y2="9"/>
+                      <line x1="15" y1="9" x2="15.01" y2="9"/>
+                    </svg>
+                    <span>Change Avatar</span>
+                  </button>
+
+                  <button id="btn-sync-trophies-profile" class="profile-action-pill-btn" title="Sync Trophies with PlayStation Network">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                    </svg>
+                    <span>Sync Trophies</span>
+                  </button>
+                </div>
               </div>
-              <div class="trophy-showcase-meta">
-                <span class="trophy-rarity">0.8% Ultra Rare</span>
-                <span class="trophy-date">Sep 28, 2026</span>
+
+              <form id="profile-name-edit-form" class="profile-name-edit-form" style="display: none;">
+                <input type="text" id="profile-name-input" class="profile-name-input" maxlength="24" placeholder="Enter Online ID..." autocomplete="off" spellcheck="false" />
+                <button type="submit" class="profile-name-save-btn">Save</button>
+                <button type="button" id="btn-cancel-profile-name" class="profile-name-cancel-btn">Cancel</button>
+              </form>
+
+              <div class="profile-bio-line">Mastering games across PC & PlayStation • Trophy Hunter</div>
+
+              <div class="profile-badges-row">
+                <span class="ps-plus-badge">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                  PlayStation®Plus Premium
+                </span>
+                <span class="ps-level-badge">Level 420 ★</span>
+                <span class="ps-status-tag">PlayStation 5 Console Master</span>
               </div>
             </div>
-            <div class="trophy-showcase-item">
-              <span class="trophy-badge-icon">🥇</span>
-              <div class="trophy-showcase-info">
-                <h4>Final Destiny</h4>
-                <p>Black Myth: Wukong • Complete the Journey to the West</p>
+          </div>
+
+          <!-- Avatar Picker Tray (collapsible) -->
+          <div id="profile-avatar-picker-tray" class="profile-avatar-picker-tray" style="display: none;">
+            <div class="avatar-picker-header">
+              <span>Select Profile Avatar</span>
+              <span class="avatar-picker-sub">Official PlayStation Character Presets</span>
+            </div>
+            <div class="avatar-picker-grid" id="profile-avatar-grid">
+              <!-- Populated by profile-manager.js -->
+            </div>
+          </div>
+
+          <!-- Level Progress Card -->
+          <div class="profile-level-progress-card">
+            <div class="level-progress-top">
+              <div class="level-badge-large">
+                <span class="level-star">★</span>
+                <span class="level-num">Level 420</span>
               </div>
-              <div class="trophy-showcase-meta">
-                <span class="trophy-rarity">1.2% Ultra Rare</span>
-                <span class="trophy-date">Oct 04, 2026</span>
+              <div class="level-progress-stats">
+                <span class="level-pct">74%</span>
+                <span class="level-sub">to Level 421 (1,480 / 2,000 XP)</span>
               </div>
             </div>
-            <div class="trophy-showcase-item">
-              <span class="trophy-badge-icon">🏆</span>
-              <div class="trophy-showcase-info">
-                <h4>The Bear and the Wolf</h4>
-                <p>God of War Ragnarök • Collect all Trophies</p>
-              </div>
-              <div class="trophy-showcase-meta">
-                <span class="trophy-rarity">1.5% Ultra Rare</span>
-                <span class="trophy-date">Aug 14, 2026</span>
-              </div>
+            <div class="level-bar-wrap">
+              <div class="level-bar-fill" style="width: 74%;"></div>
             </div>
-            <div class="trophy-showcase-item">
-              <span class="trophy-badge-icon">🏆</span>
-              <div class="trophy-showcase-info">
-                <h4>Astro-Nomical!</h4>
-                <p>Astro Bot • Rescued all 300 VIP bots</p>
+          </div>
+
+          <!-- 5-Column Trophy Statistics Grid (Total 316 = 4 + 32 + 86 + 194) -->
+          <div class="trophy-stats-grid">
+            <div class="trophy-stat-card trophy-card-total">
+              <span class="trophy-icon">🏆</span>
+              <span class="trophy-count">316</span>
+              <span class="trophy-label">Total Trophies</span>
+            </div>
+            <div class="trophy-stat-card trophy-card-platinum">
+              <span class="trophy-icon">🏆</span>
+              <span class="trophy-count">4</span>
+              <span class="trophy-label">Platinum</span>
+            </div>
+            <div class="trophy-stat-card trophy-card-gold">
+              <span class="trophy-icon">🥇</span>
+              <span class="trophy-count">32</span>
+              <span class="trophy-label">Gold</span>
+            </div>
+            <div class="trophy-stat-card trophy-card-silver">
+              <span class="trophy-icon">🥈</span>
+              <span class="trophy-count">86</span>
+              <span class="trophy-label">Silver</span>
+            </div>
+            <div class="trophy-stat-card trophy-card-bronze">
+              <span class="trophy-icon">🥉</span>
+              <span class="trophy-count">194</span>
+              <span class="trophy-label">Bronze</span>
+            </div>
+          </div>
+
+          <!-- Recent Trophies Showcase Section -->
+          <div class="trophy-showcase-section">
+            <div class="trophy-showcase-header">
+              <h3 class="trophy-showcase-title">🏆 Recent Trophies (Latest Unlocks)</h3>
+              <span class="trophy-showcase-badge">PlayStation™Network Cloud Sync Active</span>
+            </div>
+
+            <div class="trophy-showcase-list">
+              <div class="trophy-showcase-item" tabindex="0">
+                <span class="trophy-badge-icon trophy-plat">🏆</span>
+                <div class="trophy-showcase-info">
+                  <h4>Dedicated</h4>
+                  <p>Marvel's Spider-Man 2 • Collect all Trophies</p>
+                </div>
+                <div class="trophy-showcase-meta">
+                  <span class="trophy-rarity rarity-ultra">0.8% Ultra Rare</span>
+                  <span class="trophy-date">Sep 28, 2026</span>
+                </div>
               </div>
-              <div class="trophy-showcase-meta">
-                <span class="trophy-rarity">4.1% Very Rare</span>
-                <span class="trophy-date">Oct 10, 2026</span>
+
+              <div class="trophy-showcase-item" tabindex="0">
+                <span class="trophy-badge-icon trophy-gold">🥇</span>
+                <div class="trophy-showcase-info">
+                  <h4>Final Destiny</h4>
+                  <p>Black Myth: Wukong • Complete the Journey to the West</p>
+                </div>
+                <div class="trophy-showcase-meta">
+                  <span class="trophy-rarity rarity-ultra">1.2% Ultra Rare</span>
+                  <span class="trophy-date">Oct 04, 2026</span>
+                </div>
+              </div>
+
+              <div class="trophy-showcase-item" tabindex="0">
+                <span class="trophy-badge-icon trophy-plat">🏆</span>
+                <div class="trophy-showcase-info">
+                  <h4>The Bear and the Wolf</h4>
+                  <p>God of War Ragnarök • Collect all Trophies</p>
+                </div>
+                <div class="trophy-showcase-meta">
+                  <span class="trophy-rarity rarity-ultra">1.5% Ultra Rare</span>
+                  <span class="trophy-date">Aug 14, 2026</span>
+                </div>
+              </div>
+
+              <div class="trophy-showcase-item" tabindex="0">
+                <span class="trophy-badge-icon trophy-gold">🥇</span>
+                <div class="trophy-showcase-info">
+                  <h4>Astro-Nomical!</h4>
+                  <p>Astro Bot • Rescued all 300 VIP bots</p>
+                </div>
+                <div class="trophy-showcase-meta">
+                  <span class="trophy-rarity rarity-very">4.1% Very Rare</span>
+                  <span class="trophy-date">Oct 10, 2026</span>
+                </div>
+              </div>
+
+              <div class="trophy-showcase-item" tabindex="0">
+                <span class="trophy-badge-icon trophy-silver">🥈</span>
+                <div class="trophy-showcase-info">
+                  <h4>One Mind</h4>
+                  <p>Ghost of Tsushima • Defeat 5 enemies with a single Dance of Wrath</p>
+                </div>
+                <div class="trophy-showcase-meta">
+                  <span class="trophy-rarity rarity-rare">12.4% Rare</span>
+                  <span class="trophy-date">Jul 22, 2026</span>
+                </div>
+              </div>
+
+              <div class="trophy-showcase-item" tabindex="0">
+                <span class="trophy-badge-icon trophy-bronze">🥉</span>
+                <div class="trophy-showcase-info">
+                  <h4>First Step into Hell</h4>
+                  <p>Resident Evil 4 • Clear Chapter 1</p>
+                </div>
+                <div class="trophy-showcase-meta">
+                  <span class="trophy-rarity rarity-common">88.6% Common</span>
+                  <span class="trophy-date">May 19, 2026</span>
+                </div>
               </div>
             </div>
           </div>
@@ -768,71 +1242,175 @@
     <!-- 4. Switcher Modal (Suspended Games) -->
     <div id="ps5-switcher-modal" class="ps5-modal-overlay">
       <div class="ps5-modal-box switcher-box">
-        <div class="ps5-modal-header">
-          <h2>Switcher</h2>
+        <div class="ps5-modal-header switcher-header">
+          <div class="switcher-header-left">
+            <h2 class="switcher-title">Switcher</h2>
+            <span class="switcher-nvme-badge">⚡ Ultra-High Speed NVMe SSD</span>
+          </div>
           <button class="modal-close-btn" data-close-overlay title="Close (○ Circle)">✕</button>
         </div>
-        <p style="color: var(--ps-white-60); margin-bottom: 20px; font-size: 0.9rem;">Fast-switch between suspended games stored in NVMe memory without losing progress.</p>
-        <div class="switcher-list">
-          <div class="switcher-item active">
-            <div class="switcher-thumb" style="background-image: url('https://images.unsplash.com/photo-1635863138275-d9b33299680b?auto=format&fit=crop&w=200&q=80');"></div>
+        <p class="switcher-desc">Fast-switch between active and suspended titles stored in NVMe memory without losing progress.</p>
+        <div class="switcher-list" id="ps5-switcher-list">
+          <div class="switcher-item active" tabindex="0" role="button" data-switch-to="pc_steam_2651280" aria-label="Resume Marvel's Spider-Man 2">
+            <div class="switcher-thumb" style="background-image: url('/assets/games/spiderman2/tile.webp');"></div>
             <div class="switcher-info">
-              <h4>Marvel's Spider-Man 2</h4>
-              <p>Active Title • Fast Travel Ready</p>
+              <div class="switcher-info-top">
+                <span class="switcher-status-badge active">
+                  <span class="switcher-dot active"></span>
+                  Now Playing
+                </span>
+                <span class="switcher-tag-ready">Fast Travel Ready</span>
+              </div>
+              <h4 class="switcher-game-name">Marvel's Spider-Man 2</h4>
+              <p class="switcher-chapter">Mission 14: Don't Be Shy • 4K 60FPS Fidelity</p>
             </div>
-            <button class="btn-switcher-action" data-switch-to="spiderman2">Resume</button>
+            <button class="btn-switcher-action btn-resume" data-switch-to="pc_steam_2651280" tabindex="-1">
+              <span>Resume</span>
+              <span class="ps-glyph glyph-cross">✕</span>
+            </button>
           </div>
-          <div class="switcher-item">
-            <div class="switcher-thumb" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=200&q=80');"></div>
+
+          <div class="switcher-item" tabindex="0" role="button" data-switch-to="pc_steam_2215430" aria-label="Switch to Ghost of Tsushima">
+            <div class="switcher-thumb" style="background-image: url('/assets/games/got/tile.webp');"></div>
             <div class="switcher-info">
-              <h4>Astro Bot</h4>
-              <p>Suspended in Memory • Gorilla Nebula</p>
+              <div class="switcher-info-top">
+                <span class="switcher-status-badge suspended">
+                  <span class="switcher-dot suspended"></span>
+                  Suspended in Memory
+                </span>
+              </div>
+              <h4 class="switcher-game-name">Ghost of Tsushima</h4>
+              <p class="switcher-chapter">Act II: Retake Castle Kaneda • Standby</p>
             </div>
-            <button class="btn-switcher-action" data-switch-to="astro-bot">Switch</button>
+            <button class="btn-switcher-action btn-switch" data-switch-to="pc_steam_2215430" tabindex="-1">
+              <span>Switch</span>
+              <span class="ps-glyph glyph-cross">✕</span>
+            </button>
           </div>
-          <div class="switcher-item">
-            <div class="switcher-thumb" style="background-image: url('https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?auto=format&fit=crop&w=200&q=80');"></div>
+
+          <div class="switcher-item" tabindex="0" role="button" data-switch-to="pc_steam_2322010" aria-label="Switch to God of War Ragnarök">
+            <div class="switcher-thumb" style="background-image: url('/assets/games/gowragnarok/tile.webp');"></div>
             <div class="switcher-info">
-              <h4>God of War Ragnarök</h4>
-              <p>Suspended in Memory • Svartalfheim</p>
+              <div class="switcher-info-top">
+                <span class="switcher-status-badge suspended">
+                  <span class="switcher-dot suspended"></span>
+                  Suspended in Memory
+                </span>
+              </div>
+              <h4 class="switcher-game-name">God of War Ragnarök</h4>
+              <p class="switcher-chapter">Realm: Svartalfheim Mines • Standby</p>
             </div>
-            <button class="btn-switcher-action" data-switch-to="gow-ragnarok">Switch</button>
+            <button class="btn-switcher-action btn-switch" data-switch-to="pc_steam_2322010" tabindex="-1">
+              <span>Switch</span>
+              <span class="ps-glyph glyph-cross">✕</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Authentic Console Footer Hints -->
+        <div class="switcher-footer-hints">
+          <div class="switcher-hint-item">
+            <span class="ps-glyph glyph-circle">○</span>
+            <span>Back</span>
+          </div>
+          <div class="switcher-hint-item">
+            <span class="ps-glyph glyph-cross">✕</span>
+            <span>Switch / Resume</span>
+          </div>
+          <div class="switcher-hint-item">
+            <span class="ps-glyph glyph-square">□</span>
+            <span>Game Options</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 5. Notifications Hub Modal -->
-    <div id="ps5-notifications-modal" class="ps5-modal-overlay">
-      <div class="ps5-modal-box notify-box">
-        <div class="ps5-modal-header">
-          <h2>Notifications</h2>
-          <button class="modal-close-btn" data-close-overlay title="Close (○ Circle)">✕</button>
+    <!-- 5. Notifications Hub Modal (Authentic PS5 Notification Center) -->
+    <div id="ps5-notifications-modal" class="ps5-modal-overlay ps5-notifications-overlay-authentic">
+      <div class="ps5-notify-card-dock">
+        <div class="ps5-modal-box notify-box ps5-notify-card-authentic">
+          <!-- Authentic Header -->
+          <div class="notify-header-authentic">
+            <div class="notify-header-title">Notifications</div>
+            <div class="notify-dnd-row" id="notify-dnd-toggle-btn" role="switch" aria-checked="false" tabindex="0" title="Toggle Do Not Disturb">
+              <span class="notify-dnd-label">Do Not Disturb</span>
+              <div class="ps5-toggle-pill">
+                <div class="ps5-toggle-thumb"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notification Cards List -->
+          <div class="notify-list" role="feed">
+            <!-- 1. Ready to play (Focused Item by default) -->
+            <div class="notify-item active-focus" data-category="downloads" tabindex="0" role="article" aria-label="Marvel's Spider-Man 2 Ready to play">
+              <img class="notify-game-thumb" src="/assets/games/spiderman2/tile.webp" alt="Spider-Man 2" onerror="this.src='/assets/games/explore/hero.svg'">
+              <div class="notify-content">
+                <div class="notify-subtitle-line">Marvel's Spider-Man 2: New Game Plus</div>
+                <div class="notify-title-line">Ready to play.</div>
+              </div>
+              <span class="notify-time-stamp">2d</span>
+            </div>
+
+            <!-- 2. Ready to play -->
+            <div class="notify-item" data-category="downloads" tabindex="0" role="article" aria-label="Ghost of Tsushima Ready to play">
+              <img class="notify-game-thumb" src="/assets/games/got/tile.webp" alt="Ghost of Tsushima" onerror="this.src='/assets/games/explore/hero.svg'">
+              <div class="notify-content">
+                <div class="notify-subtitle-line">Ghost of Tsushima: Legends Mode</div>
+                <div class="notify-title-line">Ready to play.</div>
+              </div>
+              <span class="notify-time-stamp">2d</span>
+            </div>
+
+            <!-- 3. Ready to play -->
+            <div class="notify-item" data-category="downloads" tabindex="0" role="article" aria-label="God of War Ragnarök Ready to play">
+              <img class="notify-game-thumb" src="/assets/games/gow/tile.webp" alt="God of War" onerror="this.src='/assets/games/explore/hero.svg'">
+              <div class="notify-content">
+                <div class="notify-subtitle-line">God of War Ragnarök: Valhalla</div>
+                <div class="notify-title-line">Ready to play.</div>
+              </div>
+              <span class="notify-time-stamp">2d</span>
+            </div>
+
+            <!-- 4. Installed -->
+            <div class="notify-item" data-category="downloads" tabindex="0" role="article" aria-label="Black Myth Wukong Installed">
+              <img class="notify-game-thumb" src="/assets/games/wukong/ps5_tile.webp" alt="Black Myth Wukong" onerror="this.src='/assets/games/explore/hero.svg'">
+              <div class="notify-content">
+                <div class="notify-subtitle-line">Black Myth: Wukong</div>
+                <div class="notify-title-line">Installed.</div>
+              </div>
+              <span class="notify-time-stamp">2d</span>
+            </div>
+
+            <!-- 5. Installed -->
+            <div class="notify-item" data-category="downloads" tabindex="0" role="article" aria-label="The Last of Us Part I Installed">
+              <img class="notify-game-thumb" src="/assets/games/tlou1/tile.webp" alt="The Last of Us Part I" onerror="this.src='/assets/games/explore/hero.svg'">
+              <div class="notify-content">
+                <div class="notify-subtitle-line">The Last of Us Part I</div>
+                <div class="notify-title-line">Installed.</div>
+              </div>
+              <span class="notify-time-stamp">2d</span>
+            </div>
+          </div>
         </div>
-        <div class="notify-list">
-          <div class="notify-item">
-            <div class="notify-icon trophy-gold">🏆</div>
-            <div class="notify-info">
-              <h4>Trophy Earned: The Great Protector</h4>
-              <p>Marvel's Spider-Man 2 • Completed Main Story</p>
-              <span class="notify-time">15m ago</span>
-            </div>
-          </div>
-          <div class="notify-item">
-            <div class="notify-icon dl-green">⬇️</div>
-            <div class="notify-info">
-              <h4>Download Complete: Update 1.004.000</h4>
-              <p>Installed to Console Storage and ready to play.</p>
-              <span class="notify-time">1h ago</span>
-            </div>
-          </div>
-          <div class="notify-item">
-            <div class="notify-icon party-blue">🎮</div>
-            <div class="notify-info">
-              <h4>Party Invite: Raid Squad</h4>
-              <p>Sarah invited you to voice chat.</p>
-              <span class="notify-time">2h ago</span>
-            </div>
+
+        <!-- Authentic PS5 Bottom Action HUD Prompts under the card -->
+        <div class="notify-hud-authentic">
+          <button class="notify-hud-pill-btn" id="btn-clear-notifications" title="Delete all notifications (□ Square)">
+            <span class="ps5-glyph-square">□</span>
+            <span>Delete</span>
+          </button>
+          <button class="notify-hud-pill-btn" id="btn-options-notifications" title="Options (Options Button)">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+              <rect x="3" y="6" width="18" height="2" rx="1"/>
+              <rect x="3" y="11" width="18" height="2" rx="1"/>
+              <rect x="3" y="16" width="18" height="2" rx="1"/>
+            </svg>
+            <span>Options</span>
+          </button>
+          <div class="notify-hud-pill-btn notify-hud-back" data-close-overlay style="cursor: pointer;" title="Back (○ Circle)">
+            <span class="ps5-glyph glyph-circle">○</span>
+            <span>Back</span>
           </div>
         </div>
       </div>
@@ -924,19 +1502,31 @@
           <button class="modal-close-btn" data-close-overlay>✕</button>
         </div>
         <div class="options-actions-list">
+          <button id="opt-btn-download-art" class="opt-action-btn" style="color: #60a5fa; border-color: rgba(96, 165, 250, 0.4); font-weight: 700;">
+            🎨 Customize Artwork & Background (Studio)
+          </button>
+          <button id="opt-btn-quick-download-art" class="opt-action-btn" style="color: #38bdf8;">
+            ⚡ Quick Auto-Download Official Artwork
+          </button>
+          <button id="opt-btn-move-left" class="opt-action-btn">
+            ⬅ Move Card Left
+          </button>
+          <button id="opt-btn-move-right" class="opt-action-btn">
+            ➡ Move Card Right
+          </button>
           <button id="opt-btn-close-game" class="opt-action-btn" style="color: #f87171; border-color: rgba(239, 68, 68, 0.4); font-weight: 800;">
             ⏹ Close Game (Exit to Windows)
           </button>
-          <button class="opt-action-btn" onclick="alert('Checking PlayStation Network for updates...\nThe game is up to date (Version 1.004.000).')">
+          <button class="opt-action-btn" onclick="window.dispatchEvent(new CustomEvent('ps5-show-notification', { detail: { title: 'PlayStation Network Update', subtitle: 'The game is up to date (Version 1.004.000).' } }))">
             Check for Update
           </button>
-          <button class="opt-action-btn" onclick="alert('Manage Game Content:\n• Story Mode (86.4 GB - Installed)\n• New Game+ DLC (Free - Installed)\n• 4K Texture Pack (Installed)')">
+          <button class="opt-action-btn" onclick="window.dispatchEvent(new CustomEvent('ps5-show-notification', { detail: { title: 'Manage Game Content', subtitle: 'Story Mode, New Game+ DLC & 4K Texture Pack are installed.' } }))">
             Manage Game Content
           </button>
-          <button class="opt-action-btn" onclick="alert('Trophy Progress:\n84% Completed • 1 Platinum, 6 Gold, 14 Silver, 28 Bronze')">
+          <button class="opt-action-btn" onclick="window.dispatchEvent(new CustomEvent('ps5-show-notification', { detail: { title: 'Trophy Progress', subtitle: '84% Completed • 1 Platinum, 6 Gold, 14 Silver, 28 Bronze' } }))">
             View Trophies
           </button>
-          <button class="opt-action-btn" onclick="alert('Cloud Storage Sync:\nSaved Data Synchronized with PlayStation Plus Cloud.')">
+          <button class="opt-action-btn" onclick="window.dispatchEvent(new CustomEvent('ps5-show-notification', { detail: { title: 'Cloud Storage Sync', subtitle: 'Saved Data Synchronized with PlayStation Plus Cloud.' } }))">
             Upload/Download Saved Data
           </button>
         </div>
@@ -957,7 +1547,10 @@
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
             </svg>
-            <span>Sync PC Games</span>
+            <span>🔄 Sync All Stores (Steam, Epic, Xbox)</span>
+          </button>
+          <button id="btn-store-diagnostics" class="lib-btn-action" style="padding: 10px 18px; border-radius: 999px; background: rgba(102, 192, 244, 0.18); border: 1px solid rgba(102, 192, 244, 0.4); color: #66c0f4; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <span>📊 Store Diagnostics</span>
           </button>
           <button id="library-btn-close" class="lib-btn-close" title="Close (○ Circle)">✕</button>
         </div>
@@ -965,8 +1558,12 @@
 
       <div class="lib-tabs-row">
         <button id="lib-tab-all" class="lib-tab active">All Games</button>
-        <button id="lib-tab-installed" class="lib-tab">Installed Games</button>
-        <button id="lib-tab-collection" class="lib-tab">Your Collection (Owned on Steam)</button>
+        <button id="lib-tab-installed" class="lib-tab">Installed</button>
+        <button id="lib-tab-steam" class="lib-tab">🎮 Steam</button>
+        <button id="lib-tab-epic" class="lib-tab">⚡ Epic Games</button>
+        <button id="lib-tab-xbox" class="lib-tab">🟢 Xbox</button>
+        <button id="lib-tab-riot" class="lib-tab">🔴 Riot</button>
+        <button id="lib-tab-collection" class="lib-tab">Cloud Collection</button>
       </div>
 
       <div id="library-games-grid" class="lib-games-grid">

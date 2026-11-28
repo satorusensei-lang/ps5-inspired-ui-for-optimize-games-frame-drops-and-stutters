@@ -28,11 +28,25 @@ export function initControlCenter() {
     window.dispatchEvent(new CustomEvent('ps5-return-home'));
   });
 
+  document.getElementById('cc-dock-library')?.addEventListener('click', () => {
+    closeControlCenter();
+    if (window.ps5OpenLibrary) {
+      window.ps5OpenLibrary('all');
+    } else {
+      openOverlay('ps5-library-modal');
+    }
+  });
+
   document.getElementById('cc-dock-switcher')?.addEventListener('click', () => {
     openOverlay('ps5-switcher-modal');
   });
 
   document.getElementById('cc-dock-notifications')?.addEventListener('click', () => {
+    openOverlay('ps5-notifications-modal');
+  });
+
+  document.getElementById('cc-dock-downloads')?.addEventListener('click', () => {
+    closeControlCenter();
     openOverlay('ps5-notifications-modal');
   });
 
@@ -50,9 +64,14 @@ export function initControlCenter() {
     window.dispatchEvent(new CustomEvent('ps5-show-notification', {
       detail: {
         title: "🎮 DualSense Wireless Controller",
-        subtitle: "Battery 100% • Haptic Feedback: Strong • Adaptive Triggers: Active"
+        subtitle: "Battery 100% • Standard Rumble Vibration: Active"
       }
     }));
+  });
+
+  document.getElementById('cc-dock-profile')?.addEventListener('click', () => {
+    closeControlCenter();
+    openOverlay('ps5-profile-modal');
   });
 
   document.getElementById('cc-dock-boot-themes')?.addEventListener('click', () => {
@@ -68,6 +87,11 @@ export function initControlCenter() {
   document.getElementById('cc-card-resume-btn')?.addEventListener('click', () => {
     closeControlCenter();
     window.dispatchEvent(new CustomEvent('ps5-request-launch'));
+  });
+
+  document.getElementById('cc-card-close-btn')?.addEventListener('click', () => {
+    closeControlCenter();
+    window.dispatchEvent(new CustomEvent('ps5-request-close-game'));
   });
 
   document.getElementById('cc-card-party-btn')?.addEventListener('click', () => {
@@ -105,6 +129,10 @@ export function closeControlCenter() {
   ps5Audio.playBackCancel();
   const ccBar = document.getElementById('ps5-control-center');
   ccBar?.classList.remove('open');
+
+  setTimeout(() => {
+    document.querySelector('.ps5-tile.active')?.focus({ preventScroll: true });
+  }, 50);
 }
 
 export function toggleControlCenter() {
@@ -120,16 +148,28 @@ function updateControlCenterCards() {
   const gameTitleEl = document.getElementById('cc-card-game-title');
   const gameSubEl = document.getElementById('cc-card-game-sub');
   const gameThumbEl = document.getElementById('cc-card-game-thumb');
+  const resumeBtn = document.getElementById('cc-card-resume-btn');
+  const closeBtn = document.getElementById('cc-card-close-btn');
 
   if (currentItem && gameTitleEl) {
     gameTitleEl.textContent = currentItem.title;
+    const gameIsRunning = isRunning();
     if (gameSubEl) {
-      gameSubEl.textContent = isRunning()
+      gameSubEl.textContent = gameIsRunning
         ? "Game Suspended in Background • Click to Resume"
         : (currentItem.liveStatus || "Ready to Resume");
     }
-    if (gameThumbEl && currentItem.tileIcon) {
-      gameThumbEl.style.backgroundImage = `url('${currentItem.tileIcon}')`;
+    if (resumeBtn) {
+      const label = resumeBtn.querySelector('span');
+      if (label) label.textContent = currentItem.isExplore ? "Open Explore" : currentItem.isStore ? "Open Store" : currentItem.isLibrary ? "Open Library" : gameIsRunning ? "Resume Activity" : "Play Game";
+    }
+    if (closeBtn) {
+      closeBtn.hidden = !gameIsRunning;
+    }
+    if (gameThumbEl) {
+      const artwork = currentItem.tileIcon || currentItem.heroBg || '';
+      gameThumbEl.style.backgroundImage = artwork ? `url('${artwork}')` : 'none';
+      gameThumbEl.classList.toggle('is-placeholder', !artwork);
     }
   }
 }

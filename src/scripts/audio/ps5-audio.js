@@ -6,6 +6,21 @@ class PS5AudioEngine {
   constructor() {
     this.ctx = null;
     this.muted = false;
+    this.soundEffectsEnabled = true;
+    this.homeMusicEnabled = true;
+  }
+
+  setSoundEffects(enabled) {
+    this.soundEffectsEnabled = Boolean(enabled);
+  }
+
+  setHomeMusic(enabled) {
+    this.homeMusicEnabled = Boolean(enabled);
+    if (!this.homeMusicEnabled) {
+      this.stopAmbientDrone();
+    } else if (!this.muted) {
+      this.startAmbientDrone();
+    }
   }
 
   init() {
@@ -22,7 +37,7 @@ class PS5AudioEngine {
 
   // Subtle soft sine navigation tick when scrolling games
   playNavTick() {
-    if (this.muted) return;
+    if (this.muted || !this.soundEffectsEnabled) return;
     this.init();
     if (!this.ctx) return;
 
@@ -43,9 +58,53 @@ class PS5AudioEngine {
     osc.stop(this.ctx.currentTime + 0.045);
   }
 
+  // Generic play sound dispatcher
+  play(name = 'select') {
+    if (this.muted) return;
+    if (name === 'select') this.playSelectChime();
+    else if (name === 'back') this.playBackCancel();
+    else if (name === 'nav' || name === 'tick') this.playNavTick();
+    else if (name === 'error') this.playErrorBeep();
+    else this.playSelectChime();
+  }
+
+  // Navigation cursor tick alias for controller navigation
+  playCursorTick() {
+    this.playNavTick();
+  }
+
+  // Back chime alias
+  playBackChime() {
+    this.playBackCancel();
+  }
+
+  // Authentic PS5 Error / Invalid Action Beep
+  playErrorBeep() {
+    if (this.muted || !this.soundEffectsEnabled) return;
+    this.init();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(260, now);
+    osc.frequency.setValueAtTime(190, now + 0.08);
+
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.24);
+  }
+
   // Warm, iconic PS5 Select/Enter Chime
   playSelectChime() {
-    if (this.muted) return;
+    if (this.muted || !this.soundEffectsEnabled) return;
     this.init();
     if (!this.ctx) return;
 
@@ -72,7 +131,7 @@ class PS5AudioEngine {
 
   // Soft descending Cancel/Back sound (Circle button)
   playBackCancel() {
-    if (this.muted) return;
+    if (this.muted || !this.soundEffectsEnabled) return;
     this.init();
     if (!this.ctx) return;
 
@@ -94,6 +153,60 @@ class PS5AudioEngine {
 
       osc.start(now + idx * 0.04);
       osc.stop(now + idx * 0.04 + 0.28);
+    });
+  }
+
+  // Authentic PlayStation 5 Trophy Earned Chime (Shimmering Platinum/Gold Triad)
+  playTrophyChime() {
+    if (this.muted || !this.soundEffectsEnabled) return;
+    this.init();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const notes = [587.33, 739.99, 880.00, 1174.66]; // D5, F#5, A5, D6
+
+    notes.forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+
+      gain.gain.setValueAtTime(0.12, now + idx * 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.65);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now + idx * 0.05);
+      osc.stop(now + idx * 0.05 + 0.7);
+    });
+  }
+
+  // Soft Authentic PS5 Notification Pop-in Chime
+  playNotificationChime() {
+    if (this.muted || !this.soundEffectsEnabled) return;
+    this.init();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const notes = [659.25, 987.77]; // E5, B5
+
+    notes.forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+
+      gain.gain.setValueAtTime(0.09, now + idx * 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.35);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now + idx * 0.04);
+      osc.stop(now + idx * 0.04 + 0.38);
     });
   }
 
@@ -230,7 +343,7 @@ class PS5AudioEngine {
 
   // PS Button Quick Menu Chime
   playControlCenterChime() {
-    if (this.muted) return;
+    if (this.muted || !this.soundEffectsEnabled) return;
     this.init();
     if (!this.ctx) return;
 
@@ -254,7 +367,7 @@ class PS5AudioEngine {
 
   // Authentic PS5 Ethereal Ambient Background Drone Loop
   startAmbientDrone() {
-    if (this.muted || this.dronePlaying) return;
+    if (this.muted || !this.homeMusicEnabled || this.dronePlaying) return;
     this.init();
     if (!this.ctx) return;
 
@@ -340,9 +453,9 @@ class PS5AudioEngine {
     } else if (gameId === 'ps-store') {
       notes = [130.81, 196.0, 261.63, 329.63];
       waveType = 'sine';
-    } else if (gameId && (gameId.includes('forza') || gameId.includes('2483190'))) {
-      notes = [87.31, 130.81, 174.61, 261.63];
-      waveType = 'sawtooth';
+    } else if (gameId && (gameId.includes('forza') || gameId.includes('2483190') || gameId.includes('1551360') || gameId.includes('2440510'))) {
+      notes = [196.00, 246.94, 293.66, 392.00, 493.88];
+      waveType = 'sine';
     } else if (gameId && (gameId.includes('tsushima') || gameId.includes('ghost'))) {
       notes = [146.83, 174.61, 220.0, 261.63, 293.66];
       waveType = 'sine';
@@ -372,6 +485,22 @@ class PS5AudioEngine {
       osc.start(now + idx * 0.08);
       osc.stop(now + idx * 0.08 + 2.6);
     });
+  }
+
+  suspendForGameplay() {
+    this.stopAmbientDrone();
+    if (this.ctx && this.ctx.state === 'running') {
+      try { this.ctx.suspend(); } catch (e) {}
+    }
+  }
+
+  resumeFromGameplay() {
+    if (this.ctx && this.ctx.state === 'suspended') {
+      try { this.ctx.resume(); } catch (e) {}
+    }
+    if (!this.muted && this.homeMusicEnabled && !this.dronePlaying) {
+      this.startAmbientDrone();
+    }
   }
 
   toggleMute() {

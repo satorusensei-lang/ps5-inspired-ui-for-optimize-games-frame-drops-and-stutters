@@ -14,6 +14,11 @@ import { ps5Audio } from '../audio/ps5-audio.js';
 import { launchGame, isRunning, exitGame } from './game-launcher.js';
 import { PS5_GAMES } from '../data/ps5-games-data.js';
 import { enterRestMode } from './boot-screen.js';
+import { getCurrentItem, moveGameInOrder } from './carousel.js';
+import { downloadOfficialArtworkInBackground } from '../services/artwork-service.js';
+import { openArtworkManager } from './artwork-modal.js';
+import { closeControlCenter } from './control-center.js';
+import { resetSettingsView, getNotificationSettings, setDoNotDisturb } from './settings-manager.js';
 
 let activeOverlayId = null;
 
@@ -21,6 +26,39 @@ export function initOverlays() {
   // Wire Settings button
   document.getElementById('btn-header-settings')?.addEventListener('click', () => openOverlay('ps5-settings-modal'));
   document.getElementById('setting-boot-themes-btn')?.addEventListener('click', () => openOverlay('ps5-boot-themes-modal'));
+
+  // Wire Artwork Customization Studio in Game Options Menu
+  document.getElementById('opt-btn-download-art')?.addEventListener('click', () => {
+    closeActiveOverlay(false);
+    const item = getCurrentItem();
+    if (item && !item.isExplore && !item.isStore && !item.isLibrary) {
+      openArtworkManager(item);
+    }
+  });
+
+  // Wire Quick Download Official Artwork
+  document.getElementById('opt-btn-quick-download-art')?.addEventListener('click', () => {
+    closeActiveOverlay(false);
+    const item = getCurrentItem();
+    if (item && !item.isExplore && !item.isStore && !item.isLibrary) {
+      downloadOfficialArtworkInBackground(item);
+    }
+  });
+
+  // Wire Move Card Left / Right buttons
+  document.getElementById('opt-btn-move-left')?.addEventListener('click', () => {
+    const item = getCurrentItem();
+    if (item && !item.isExplore && !item.isStore && !item.isLibrary) {
+      moveGameInOrder(item.id, 'left');
+    }
+  });
+
+  document.getElementById('opt-btn-move-right')?.addEventListener('click', () => {
+    const item = getCurrentItem();
+    if (item && !item.isExplore && !item.isStore && !item.isLibrary) {
+      moveGameInOrder(item.id, 'right');
+    }
+  });
 
   // Wire Audio Mute/Unmute button
   const audioBtn = document.getElementById('btn-header-audio');
@@ -51,15 +89,55 @@ export function initOverlays() {
     btn.addEventListener('click', closeActiveOverlay);
   });
 
-  // Switcher direct launch actions
-  document.querySelectorAll('[data-switch-to]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const gameId = btn.getAttribute('data-switch-to');
-      const game = PS5_GAMES.find(g => g.id === gameId);
-      if (game) {
+  // Allow clicking modal backdrop directly to dismiss
+  document.querySelectorAll('.ps5-modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
         closeActiveOverlay();
-        window.dispatchEvent(new CustomEvent('ps5-launch-game', { detail: game }));
       }
+    });
+  });
+
+  // Switcher direct launch actions & keyboard navigation
+  const switcherItems = document.querySelectorAll('.switcher-item');
+  const launchSwitcherGame = (gameId) => {
+    if (!gameId) return;
+    const game = PS5_GAMES.find(g => g.id === gameId || g.appId === gameId || (gameId === 'spiderman2' && g.id === 'pc_steam_2651280') || (gameId === 'gow-ragnarok' && g.id === 'pc_steam_2322010') || (gameId === 'astro-bot' && (g.id === 'pc_steam_2215430' || g.id === 'pc_steam_2483190')));
+    if (game) {
+      try { ps5Audio.playSelectChime(); } catch (e) {}
+      closeActiveOverlay();
+      window.dispatchEvent(new CustomEvent('ps5-launch-game', { detail: game }));
+    }
+  };
+
+  switcherItems.forEach((item, idx) => {
+    item.addEventListener('click', (e) => {
+      const targetBtn = e.target.closest('[data-switch-to]');
+      const gameId = targetBtn ? targetBtn.getAttribute('data-switch-to') : item.getAttribute('data-switch-to');
+      launchSwitcherGame(gameId);
+    });
+
+    item.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const gameId = item.getAttribute('data-switch-to');
+        launchSwitcherGame(gameId);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const nextIdx = (idx + 1) % switcherItems.length;
+        switcherItems[nextIdx]?.focus();
+        try { ps5Audio.playNavTick(); } catch (err) {}
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prevIdx = (idx - 1 + switcherItems.length) % switcherItems.length;
+        switcherItems[prevIdx]?.focus();
+        try { ps5Audio.playNavTick(); } catch (err) {}
+      }
+    });
+
+    item.addEventListener('focus', () => {
+      switcherItems.forEach(it => it.classList.remove('selected'));
+      item.classList.add('selected');
     });
   });
 
@@ -76,6 +154,108 @@ export function initOverlays() {
   document.getElementById('btn-power-off')?.addEventListener('click', () => {
     turnOffPS5();
   });
+
+  // Do Not Disturb toggle in Notifications Center
+  const dndToggle = document.getElementById('notify-dnd-toggle-btn');
+  if (dndToggle) {
+    let lastDndToggle = 0;
+    const doDndToggle = (e) => {
+      const now = Date.now();
+      if (now - lastDndToggle < 160) {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        return;
+      }
+      lastDndToggle = now;
+
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      const currentDnd = getNotificationSettings().doNotDisturb === true;
+      const nextDnd = !currentDnd;
+      setDoNotDisturb(nextDnd);
+
+      dndToggle.classList.toggle('active', nextDnd);
+      dndToggle.setAttribute('aria-checked', nextDnd ? 'true' : 'false');
+      const pill = dndToggle.querySelector('.ps5-toggle-pill');
+      if (pill) pill.classList.toggle('active', nextDnd);
+
+      try { ps5Audio.playNavTick(); } catch (err) {}
+      window.dispatchEvent(new CustomEvent('ps5-show-notification', {
+        detail: {
+          title: nextDnd ? "🔕 Do Not Disturb On" : "🔔 Do Not Disturb Off",
+          subtitle: nextDnd ? "Pop-up notifications will be muted." : "Notifications will appear normally."
+        }
+      }));
+    };
+
+    dndToggle.onclick = doDndToggle;
+    dndToggle.onkeydown = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        doDndToggle(e);
+      }
+    };
+  }
+
+  // Clear / Delete notifications action
+  document.getElementById('btn-clear-notifications')?.addEventListener('click', () => {
+    const list = document.querySelector('.notify-list');
+    if (list) {
+      list.innerHTML = `
+        <div class="notify-empty-state">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.8">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <div class="notify-empty-title">No New Notifications</div>
+          <p class="notify-empty-sub">Downloads, updates, and trophies will appear here.</p>
+        </div>
+      `;
+      try { ps5Audio.playBackCancel(); } catch (e) {}
+      window.dispatchEvent(new CustomEvent('ps5-show-notification', {
+        detail: {
+          title: "🗑️ Notifications Cleared",
+          subtitle: "All system notifications deleted."
+        }
+      }));
+    }
+  });
+
+  // Options button in Notifications HUD
+  document.getElementById('btn-options-notifications')?.addEventListener('click', () => {
+    try { ps5Audio.playSelectChime(); } catch (e) {}
+    window.dispatchEvent(new CustomEvent('ps5-show-notification', {
+      detail: {
+        title: "⚙️ Notification Settings",
+        subtitle: "Pop-up timing: Standard • Downloads: Enabled • Trophies: All"
+      }
+    }));
+  });
+
+  // Interactive settings items feedback
+
+
+  // Notification item clicks and focus tracking
+  document.querySelectorAll('.notify-item').forEach(item => {
+    item.addEventListener('focus', () => {
+      document.querySelectorAll('.notify-item').forEach(i => i.classList.remove('active-focus'));
+      item.classList.add('active-focus');
+    });
+
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.notify-item').forEach(i => i.classList.remove('active-focus'));
+      item.classList.add('active-focus');
+      const title = item.querySelector('.notify-title-line')?.textContent || item.querySelector('.notify-title-text')?.textContent || 'Notification';
+      const desc = item.querySelector('.notify-subtitle-line')?.textContent || item.querySelector('.notify-desc-text')?.textContent || '';
+      try { ps5Audio.playSelectChime(); } catch (e) {}
+      window.dispatchEvent(new CustomEvent('ps5-show-notification', {
+        detail: { title, subtitle: desc }
+      }));
+    });
+  });
 }
 
 export function openOverlay(overlayId) {
@@ -90,28 +270,92 @@ export function openOverlay(overlayId) {
   ps5Audio.playSelectChime();
   modal.classList.add('active');
 
-  // Focus first actionable button inside modal
-  const firstFocus = modal.querySelector('button, [tabindex="0"]');
-  firstFocus?.focus();
+  if (overlayId === 'ps5-settings-modal') {
+    resetSettingsView();
+    const scroll = modal.querySelector('.ps5-settings-scroll-authentic');
+    if (scroll) scroll.scrollTop = 0;
+  }
+
+  if (overlayId === 'ps5-notifications-hub') {
+    const dndActive = getNotificationSettings().doNotDisturb === true;
+    const dndToggle = document.getElementById('notify-dnd-toggle-btn');
+    if (dndToggle) {
+      dndToggle.classList.toggle('active', dndActive);
+      dndToggle.setAttribute('aria-checked', dndActive ? 'true' : 'false');
+      const pill = dndToggle.querySelector('.ps5-toggle-pill');
+      if (pill) pill.classList.toggle('active', dndActive);
+    }
+  }
+
+  // Focus primary actionable item inside modal (prioritizing authentic settings rows over close button)
+  setTimeout(() => {
+    let primaryFocus = null;
+    if (overlayId === 'ps5-switcher-modal') {
+      primaryFocus = modal.querySelector('.switcher-item.active, .switcher-item');
+    }
+    if (!primaryFocus) {
+      primaryFocus = modal.querySelector(
+        '.settings-row-authentic.clickable, ' +
+        '.settings-row-authentic, ' +
+        '.settings-item.clickable, ' +
+        '.power-option-btn, ' +
+        '.theme-card, ' +
+        '.opt-action-btn, ' +
+        '.store-item-card, ' +
+        'button:not([data-close-overlay]):not(.modal-close-btn), ' +
+        '[tabindex="0"], ' +
+        'input:not([disabled])'
+      ) || modal.querySelector('button, [tabindex="0"]');
+    }
+
+    primaryFocus?.focus();
+  }, 50);
 }
 
 export function closeActiveOverlay(playSound = true) {
-  if (!activeOverlayId) return false;
+  if (!activeOverlayId) {
+    document.querySelectorAll('.ps5-modal-overlay.active').forEach(m => m.classList.remove('active'));
+    return false;
+  }
 
+  const closingId = activeOverlayId;
   const modal = document.getElementById(activeOverlayId);
   if (modal) {
     modal.classList.remove('active');
   }
 
   activeOverlayId = null;
+
+  try {
+    if (document.activeElement && document.activeElement !== document.body && typeof document.activeElement.blur === 'function') {
+      document.activeElement.blur();
+    }
+  } catch (e) {}
+
+  if (closingId === 'ps5-settings-modal') {
+    resetSettingsView();
+  }
+
   if (playSound) {
     ps5Audio.playBackCancel();
   }
+
+  // Restore focus to active carousel tile
+  setTimeout(() => {
+    document.querySelector('.ps5-tile.active')?.focus({ preventScroll: true });
+  }, 50);
+
   return true;
 }
 
 export function hasActiveOverlay() {
-  return activeOverlayId !== null;
+  if (!activeOverlayId) return false;
+  const modal = document.getElementById(activeOverlayId);
+  if (!modal || !modal.classList.contains('active')) {
+    activeOverlayId = null;
+    return false;
+  }
+  return true;
 }
 
 export function getActiveOverlayId() {
@@ -123,8 +367,11 @@ export function restartPS5() {
 
   // Cleanly close any open overlays, modals, and control center dock
   document.querySelectorAll('.ps5-modal-overlay.active').forEach(m => m.classList.remove('active'));
-  document.getElementById('ps5-control-center')?.classList.remove('active');
+  document.getElementById('ps5-control-center')?.classList.remove('active', 'open');
   document.getElementById('ps5-library-modal')?.classList.remove('active');
+  try {
+    closeControlCenter();
+  } catch (e) {}
 
   try {
     ps5Audio.playBackCancel();
@@ -148,9 +395,11 @@ export function restartPS5() {
     blackout.classList.add('active');
   }
 
-  // Authentic PS5 system reboot interval before browser page reload
+  // Authentic PS5 system reboot interval before browser page reload / Electron app reboot
   setTimeout(() => {
-    if (typeof window !== 'undefined' && window.location) {
+    if (window.electronAPI?.rebootApp) {
+      window.electronAPI.rebootApp();
+    } else if (typeof window !== 'undefined' && window.location) {
       window.location.reload();
     }
   }, 2200);
@@ -160,8 +409,11 @@ export function turnOffPS5() {
   closeActiveOverlay(false);
 
   document.querySelectorAll('.ps5-modal-overlay.active').forEach(m => m.classList.remove('active'));
-  document.getElementById('ps5-control-center')?.classList.remove('active');
+  document.getElementById('ps5-control-center')?.classList.remove('active', 'open');
   document.getElementById('ps5-library-modal')?.classList.remove('active');
+  try {
+    closeControlCenter();
+  } catch (e) {}
 
   try {
     ps5Audio.playBackCancel();
@@ -186,6 +438,11 @@ export function turnOffPS5() {
   }
 
   setTimeout(() => {
+    if (window.electronAPI?.closeWindow) {
+      window.electronAPI.closeWindow();
+      return;
+    }
+
     if (spinner) spinner.style.display = 'none';
     if (sublabelEl) sublabelEl.style.display = 'none';
     if (labelEl) {
