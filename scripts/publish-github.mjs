@@ -2,6 +2,12 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import {
+  fetchReleasedVersion,
+  readPackageVersion,
+  resolveNextPatchVersion,
+  writeVersionToPackageFiles
+} from './bump-version.mjs';
 
 const DEFAULT_REPO_OWNER = 'satorusensei-lang';
 const DEFAULT_REPO_NAME = 'ps5-inspired-ui-for-optimize-games-frame-drops-and-stutters';
@@ -14,6 +20,8 @@ function parseArgs(argv) {
     skipBuild: false,
     skipPush: false,
     skipRelease: false,
+    noBump: false,
+    version: '',
     message: ''
   };
   for (let i = 0; i < argv.length; i++) {
@@ -21,7 +29,10 @@ function parseArgs(argv) {
     if (token === '--skip-build') args.skipBuild = true;
     else if (token === '--skip-push') args.skipPush = true;
     else if (token === '--skip-release') args.skipRelease = true;
-    else if ((token === '--message' || token === '-m') && argv[i + 1]) {
+    else if (token === '--no-bump') args.noBump = true;
+    else if (token === '--version' && argv[i + 1]) {
+      args.version = argv[++i];
+    } else if ((token === '--message' || token === '-m') && argv[i + 1]) {
       args.message = argv[++i];
     }
   }
@@ -233,15 +244,56 @@ async function upsertReleaseAndUpload({ repoSlug, version, sha, exePath, blockma
   }
 }
 
+function syncRemoteMainBeforeBump() {
+  try {
+    run('git', ['fetch', 'origin', 'main']);
+    const behindCount = Number(
+      run('git', ['rev-list', '--count', 'HEAD..origin/main'], { capture: true }).trim() || '0'
+    );
+    if (behindCount > 0) {
+      console.log(`[Publish] Integrating ${behindCount} newer commit(s) from origin/main...`);
+      run('git', ['pull', '--rebase', '--autostash', 'origin', 'main']);
+    }
+  } catch (err) {
+    console.warn(`[Publish] Warning: Could not sync origin/main before version bump: ${err.message}`);
+  }
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8'));
-  const version = pkg.version || '1.0.0';
+  const cwd = process.cwd();
   const repoSlug = `${DEFAULT_REPO_OWNER}/${DEFAULT_REPO_NAME}`;
-  const exePath = path.join(process.cwd(), 'release', `MYRAA-PS5-Setup-${version}.exe`);
-  const blockmapPath = `${exePath}.blockmap`;
 
   ensureOriginRemote(DEFAULT_REMOTE_URL);
+  if (!args.skipPush) {
+    syncRemoteMainBeforeBump();
+  }
+
+  let token = '';
+  try {
+    token = resolveGitHubToken();
+  } catch (err) {
+    if (!args.skipRelease) throw err;
+  }
+
+  const currentVersion = readPackageVersion(cwd);
+  let version = currentVersion;
+
+  if (args.version) {
+    version = writeVersionToPackageFiles(args.version, cwd);
+    console.log(`[Publish] Set explicit version: ${currentVersion} -> ${version}`);
+  } else if (!args.noBump) {
+    const { version: releasedVersion } = await fetchReleasedVersion({ repoSlug, releaseTag: RELEASE_TAG, token });
+    const nextVersion = resolveNextPatchVersion({ currentVersion, releasedVersion });
+    version = writeVersionToPackageFiles(nextVersion, cwd);
+    console.log(
+      `[Publish] Auto-bumped patch version: ${currentVersion} -> ${version}` +
+        (releasedVersion ? ` (latest released asset: ${releasedVersion})` : '')
+    );
+  }
+
+  const exePath = path.join(cwd, 'release', `MYRAA-PS5-Setup-${version}.exe`);
+  const blockmapPath = `${exePath}.blockmap`;
 
   console.log('[Publish] Running project verification checks...');
   runNpm(['run', 'verify:agent']);
@@ -256,7 +308,7 @@ async function main() {
     run('git', ['add', '-A']);
     const stagedStatus = run('git', ['status', '--porcelain'], { capture: true }).trim();
     if (stagedStatus) {
-      const msg = args.message || `chore: sync MYRAA desktop updates & v${version} release config`;
+      const msg = args.message || `chore: release MYRAA v${version}`;
       run('git', ['commit', '-m', msg]);
     }
     console.log('[Publish] Pushing main branch to GitHub origin...');
@@ -268,7 +320,6 @@ async function main() {
       throw new Error(`Windows installer not found at ${exePath}. Run without --skip-build to generate it.`);
     }
     const headSha = run('git', ['rev-parse', 'HEAD'], { capture: true }).trim();
-    const token = resolveGitHubToken();
     await upsertReleaseAndUpload({ repoSlug, version, sha: headSha, exePath, blockmapPath, token });
   }
 

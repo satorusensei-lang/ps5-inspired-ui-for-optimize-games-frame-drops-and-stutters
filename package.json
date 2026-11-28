@@ -1,6 +1,6 @@
 {
   "name": "myraa",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MYRAA PlayStation 5 Desktop Experience & Multi-Store Game Launcher",
   "author": "MYRAA",
   "main": "electron/main.cjs",

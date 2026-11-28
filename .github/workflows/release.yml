@@ -21,7 +21,7 @@ permissions:
 
 concurrency:
   group: release-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build-windows-release:
@@ -29,6 +29,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -38,6 +40,13 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Auto-bump patch version when needed
+        id: bump
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: node scripts/bump-version.mjs --ci
 
       - name: Verify project grounding & tests
         run: |
@@ -52,7 +61,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_SHA: ${{ steps.bump.outputs.commit_sha || github.sha }}
         run: |
           $ErrorActionPreference = 'Stop'
           $repo = $env:REPO
@@ -107,3 +116,7 @@ jobs:
           if (Test-Path $blockmapPath) { $uploadFiles += $blockmapPath }
           gh release upload $tag @uploadFiles --repo $repo --clobber
           if ($LASTEXITCODE -ne 0) { throw "gh release upload failed with exit code $LASTEXITCODE" }
+
+          if ($commitSha) {
+            gh api -X PATCH "repos/$repo/git/refs/tags/$tag" -f "sha=$commitSha" -F force=true *> $null
+          }

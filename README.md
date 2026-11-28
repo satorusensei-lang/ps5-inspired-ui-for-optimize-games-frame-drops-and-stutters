@@ -35,6 +35,7 @@ A PlayStation 5-inspired Windows desktop launcher built with **Electron 44**, **
 │   └── xbox-sync.cjs               # Store entitlement verification & Xbox record merge helpers
 ├── public/assets/                  # Bundled icons, fonts, game art, and media assets
 ├── scripts/
+│   ├── bump-version.mjs            # Auto-bumps patch version (1.0.1 -> 1.0.2...) across local & CI
 │   ├── publish-github.mjs          # One-command build + git push + GitHub Release uploader
 │   ├── verify-agent-grounding.mjs  # Verifies required files, local imports, and static assets
 │   └── verify-steam-download-snapshot.mjs
@@ -82,8 +83,8 @@ npm run dist:win
 
 ## Automatic GitHub Sync & Releases
 
-- **CI Automation (`.github/workflows/release.yml`)**: Every push to `main` touching app or build files automatically runs `npm ci`, `npm run verify:agent`, `npm run dist:win` on `windows-latest`, and replaces the `.exe` asset on the [`ps5` GitHub Release](https://github.com/satorusensei-lang/ps5-inspired-ui-for-optimize-games-frame-drops-and-stutters/releases/tag/ps5).
-- **Local One-Command Publish (`npm run release:github`)**: Runs verification checks, builds the fresh NSIS `.exe` via `npm run dist:win`, pushes local source commits to `origin main`, and uploads the new `.exe` directly to GitHub Releases.
+- **CI Automation (`.github/workflows/release.yml`)**: Every push to `main` touching app or build files automatically runs `scripts/bump-version.mjs --ci` (auto-incrementing the patch version `1.0.1` -> `1.0.2` -> `1.0.3`... unless the pushed commit already bumped it), runs `npm run verify:agent`, builds `MYRAA-PS5-Setup-<version>.exe` via `npm run dist:win` on `windows-latest`, and updates the [`ps5` GitHub Release](https://github.com/satorusensei-lang/ps5-inspired-ui-for-optimize-games-frame-drops-and-stutters/releases/tag/ps5).
+- **Local One-Command Publish (`npm run release:github`)**: Syncs with `origin/main`, auto-bumps the patch version (unless `--no-bump` or `--version <x.y.z>` is passed), runs verification checks, builds the fresh NSIS `.exe` via `npm run dist:win`, commits & pushes to `origin main`, and replaces the `.exe` on the `ps5` Release.
 
 ## Safety, Recovery & Disclaimers
 
